@@ -5,7 +5,6 @@ export default tseslint.config(
   ...mantine,
   { ignores: ['**/*.{mjs,cjs,js,d.ts,d.mts}'] },
   {
-    files: ['**/*.story.tsx'],
-    rules: { 'no-console': 'off' },
+    rules: { 'no-console': 'off', curly: 'off' },
   }
 );
