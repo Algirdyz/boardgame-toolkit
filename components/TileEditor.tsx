@@ -1,5 +1,5 @@
 import { TextInput, Select, ColorInput, NumberInput, Button, Stack } from '@mantine/core';
-import { Tile } from '../lib/types';
+import { Tile } from './lib/types';
 
 interface TileEditorProps {
     tile: Tile;

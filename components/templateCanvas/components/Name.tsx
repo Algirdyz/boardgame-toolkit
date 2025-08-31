@@ -7,11 +7,16 @@ export const createName = () => {
         width: 150,
         fontSize: 20,
         textAlign: 'center',
-        backgroundColor: 'white',
+        backgroundColor: 'lightblue',
+        rx: 10,
+        ry: 10,
         borderColor: 'blue',
         cornerColor: 'blue',
         cornerSize: 6,
-        transparentCorners: false
+        transparentCorners: false,
+        lockScalingY: true,
+        snapAngle: 90,
+        fontFamily: 'Lato',
     });
     return nameText;
 };

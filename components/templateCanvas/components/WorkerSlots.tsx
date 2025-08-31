@@ -1,5 +1,5 @@
-import { WORKER_SLOT_SIZE } from '@/app/lib/constants';
-import { WorkerTemplate } from '@/app/lib/templateTypes';
+import { WORKER_SLOT_SIZE } from '@/components/lib/constants';
+import { WorkerTemplate } from '@/components/lib/templateTypes';
 import * as fabric from 'fabric';
 
 const createWorkerSlot = () => {

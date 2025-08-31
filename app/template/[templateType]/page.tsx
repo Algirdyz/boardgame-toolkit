@@ -1,10 +1,11 @@
 'use client';
 
+import { getDefaultTemplate } from '@/components/lib/shapes';
+import { TemplateType } from '@/components/lib/templateTypes';
 import TemplateCanvas from '@/app/template/[templateType]/TemplateCanvas';
 import TemplateEditor from '@/app/template/[templateType]/TemplateEditor';
-import { getDefaultTemplate } from '@/app/lib/shapes';
-import { TemplateType } from '@/app/lib/templateTypes';
-import { AppShell, Box } from '@mantine/core';
+import { SimpleAppShell } from '@/components/SimpleAppShell';
+import { Box } from '@mantine/core';
 import { useParams } from 'next/navigation';
 import { useState } from 'react';
 
@@ -15,25 +16,19 @@ const TemplatePage = () => {
         return <div>Template not found</div>;
     }
     return (
-        <AppShell
-            header={{ height: 60 }}
-            padding={0}
-        >
-            <AppShell.Header>
-                test
-            </AppShell.Header>
-            <AppShell.Navbar p="md">
+        <SimpleAppShell>
+            <SimpleAppShell.Sidebar title={`Template: ${template.type}`}>
                 <TemplateEditor
                     template={template}
                     setTemplate={setTemplate}
                 />
-            </AppShell.Navbar>
-            <AppShell.Main>
+            </SimpleAppShell.Sidebar>
+            <SimpleAppShell.Body>
                 <Box h="calc(100vh - var(--app-shell-header-height, 0px) - var(--app-shell-footer-height, 0px) - 10px) " p={0} m={0}>
                     <TemplateCanvas template={template} />
                 </Box>
-            </AppShell.Main>
-        </AppShell>
+            </SimpleAppShell.Body>
+        </SimpleAppShell>
     )
 };
 

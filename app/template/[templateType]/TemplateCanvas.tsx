@@ -1,17 +1,47 @@
 import { useEffect, useRef } from 'react';
 import * as fabric from 'fabric';
-import { getShape } from '../../lib/shapes';
+import { getShape } from '../../../components/lib/shapes';
 import { Box } from '@mantine/core';
 import { useElementSize } from '@mantine/hooks';
-import { createName } from '../../components/templateCanvas/components/Name';
-import { createResourceList } from '../../components/templateCanvas/components/ResourceList';
-import { createWorkerSlots } from '../../components/templateCanvas/components/WorkerSlots';
-import { TemplateDefinition, WorkerTemplate } from '@/app/lib/templateTypes';
+import { createName } from '../../../components/templateCanvas/components/Name';
+import { createResourceList } from '../../../components/templateCanvas/components/ResourceList';
+import { createWorkerSlots } from '../../../components/templateCanvas/components/WorkerSlots';
+import { TemplateDefinition, WorkerTemplate } from '@/components/lib/templateTypes';
 
 interface TemplateCanvasProps {
     template: TemplateDefinition;
 }
 
+const drawGrid = (canvas: fabric.Canvas) => {
+    const pixelsPerCm = 37.8; // Approximate pixels per cm at 96 DPI
+    const width = canvas.getWidth();
+    const height = canvas.getHeight();
+
+    const lines = [];
+    // Add vertical lines
+    for (let i = 0; i < width / pixelsPerCm; i++) {
+        lines.push(new fabric.Line([i * pixelsPerCm, 0, i * pixelsPerCm, height], {
+            stroke: '#ccc',
+            selectable: false,
+            evented: false,
+        }));
+    }
+
+    // Add horizontal lines
+    for (let i = 0; i < height / pixelsPerCm; i++) {
+        lines.push(new fabric.Line([0, i * pixelsPerCm, width, i * pixelsPerCm], {
+            stroke: '#ccc',
+            selectable: false,
+            evented: false,
+        }));
+    }
+    const gridGroup = new fabric.Group(lines, {
+        selectable: false,
+        evented: false,
+    });
+    canvas.add(gridGroup);
+    canvas.sendObjectToBack(gridGroup);
+};
 
 const TemplateCanvas = ({ template }: TemplateCanvasProps) => {
     const { type, workerDefinition } = template;
@@ -85,6 +115,8 @@ const TemplateCanvas = ({ template }: TemplateCanvasProps) => {
 
         const canvas = canvasRef.current;
         canvas.clear();
+
+        drawGrid(canvas);
 
         // Add template shape
         const shape = getShape(type, 'lightgrey');
