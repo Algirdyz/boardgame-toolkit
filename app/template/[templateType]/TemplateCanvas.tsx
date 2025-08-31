@@ -1,78 +1,38 @@
-import { useEffect, useRef } from 'react';
-import * as fabric from 'fabric';
-import { getShape } from '../../../components/lib/shapes';
-import { Box } from '@mantine/core';
+import { getDPI } from '@/app/lib/dpi';
+import drawGrid from '@/components/canvas/canvasGrid';
+import { PIXELS_PER_CM } from '@/components/lib/constants';
+import { TemplateDefinition } from '@/components/lib/templateTypes';
+import { Box, SegmentedControl } from '@mantine/core';
 import { useElementSize } from '@mantine/hooks';
-import { createName } from '../../../components/templateCanvas/components/Name';
-import { createResourceList } from '../../../components/templateCanvas/components/ResourceList';
-import { createWorkerSlots } from '../../../components/templateCanvas/components/WorkerSlots';
-import { TemplateDefinition, WorkerTemplate } from '@/components/lib/templateTypes';
+import * as fabric from 'fabric';
+import { useEffect, useRef, useState } from 'react';
+import { getShape } from '../../../components/lib/shapes';
+import { useNameDef } from '../../../components/templateCanvas/components/Name';
+import { useResourceListDef } from '../../../components/templateCanvas/components/ResourceList';
+import { useWorkerDef } from '../../../components/templateCanvas/components/WorkerSlots';
 
 interface TemplateCanvasProps {
     template: TemplateDefinition;
 }
 
-const drawGrid = (canvas: fabric.Canvas) => {
-    const pixelsPerCm = 37.8; // Approximate pixels per cm at 96 DPI
-    const width = canvas.getWidth();
-    const height = canvas.getHeight();
-
-    const lines = [];
-    // Add vertical lines
-    for (let i = 0; i < width / pixelsPerCm; i++) {
-        lines.push(new fabric.Line([i * pixelsPerCm, 0, i * pixelsPerCm, height], {
-            stroke: '#ccc',
-            selectable: false,
-            evented: false,
-        }));
-    }
-
-    // Add horizontal lines
-    for (let i = 0; i < height / pixelsPerCm; i++) {
-        lines.push(new fabric.Line([0, i * pixelsPerCm, width, i * pixelsPerCm], {
-            stroke: '#ccc',
-            selectable: false,
-            evented: false,
-        }));
-    }
-    const gridGroup = new fabric.Group(lines, {
-        selectable: false,
-        evented: false,
-    });
-    canvas.add(gridGroup);
-    canvas.sendObjectToBack(gridGroup);
-};
-
 const TemplateCanvas = ({ template }: TemplateCanvasProps) => {
-    const { type, workerDefinition } = template;
+    const { type, workerDefinition, nameDefinition, resourceListDefinition } = template;
+    const [viewMode, setViewMode] = useState('fit');
+    const [pixelsPerCm, setPixelsPerCm] = useState(PIXELS_PER_CM);
 
-    const workerGroup = useRef<fabric.Group | null>(null);
     const canvasHtmlRef = useRef<HTMLCanvasElement>(null);
     const canvasRef = useRef<fabric.Canvas | null>(null);
+
+    const workerGroup = useWorkerDef(canvasRef.current);
+    const name = useNameDef(canvasRef.current);
+    const resourceList = useResourceListDef(canvasRef.current);
     const { ref, width, height } = useElementSize();
 
-    const updateWorkerDefinition = (newDef: WorkerTemplate) => {
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-
-        let x = 0;
-        let y = 0;
-        if (workerGroup.current) {
-            x = workerGroup.current.left || 0;
-            y = workerGroup.current.top || 0;
-            canvas.remove(workerGroup.current);
-            workerGroup.current = null;
-        }
-        if (newDef) {
-            const workerSlots = createWorkerSlots(newDef, width, height);
-            workerSlots.set({ left: x, top: y });
-            workerGroup.current = workerSlots;
-            if (workerSlots) {
-                canvas.add(workerSlots);
-            }
-        }
-    };
-
+    useEffect(() => {
+        const dpi = getDPI();
+        console.log(dpi);
+        setPixelsPerCm(dpi / 2.54);
+    }, []);
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -104,7 +64,7 @@ const TemplateCanvas = ({ template }: TemplateCanvasProps) => {
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
-        updateWorkerDefinition(workerDefinition);
+        workerGroup.updateWorkerDefinition(width, height, workerDefinition);
 
     }, [workerDefinition]);
 
@@ -115,36 +75,61 @@ const TemplateCanvas = ({ template }: TemplateCanvasProps) => {
 
         const canvas = canvasRef.current;
         canvas.clear();
+        canvas.setViewportTransform([1, 0, 0, 1, 0, 0]); // Reset zoom and pan
 
-        drawGrid(canvas);
 
         // Add template shape
-        const shape = getShape(type, 'lightgrey');
+        const shape = getShape(type, 'white');
         shape.set({
-            left: 50,
-            top: 50,
+            left: pixelsPerCm,
+            top: pixelsPerCm,
             selectable: false,
             evented: false,
         });
         canvas.add(shape);
 
-        // Add draggable components
-        const nameText = createName();
-        const resourceList = createResourceList();
+        if (resourceListDefinition) {
+            resourceList.updateResourceListDefinition(width, height, resourceListDefinition);
+        }
 
-        canvas.add(nameText, resourceList);
+        if (nameDefinition) {
+            name.updateNameDefinition(width, height, nameDefinition);
+        }
 
         if (workerDefinition) {
-            updateWorkerDefinition(workerDefinition);
+            workerGroup.updateWorkerDefinition(width, height, workerDefinition);
         }
+
+        if (viewMode === 'fit') {
+            const padding = 50;
+            const shapeBounds = shape.getBoundingRect();
+            const scaleX = (width - padding * 2) / shapeBounds.width;
+            const scaleY = (height - padding * 2) / shapeBounds.height;
+            const zoom = Math.min(scaleX, scaleY);
+
+            const shapeCenter = shape.getCenterPoint();
+            const panX = (width / 2) - (shapeCenter.x * zoom);
+            const panY = (height / 2) - (shapeCenter.y * zoom);
+            canvas.setViewportTransform([zoom, 0, 0, zoom, panX, panY]);
+        }
+        drawGrid(canvas, pixelsPerCm);
 
         canvas.renderAll();
 
-    }, [type, width, height]);
+    }, [type, width, height, viewMode, pixelsPerCm, workerDefinition, nameDefinition, resourceListDefinition]);
 
 
     return (
         <Box ref={ref} p={0} m={0} style={{ position: 'relative', width: '100%', height: '100%' }}>
+            <SegmentedControl
+                value={viewMode}
+                onChange={setViewMode}
+                data={[
+                    { label: 'Fit to View', value: 'fit' },
+                    { label: 'Actual Size', value: 'actual' },
+                ]}
+                style={{ position: 'absolute', top: 10, right: 10, zIndex: 1 }}
+            />
             <canvas ref={canvasHtmlRef} />
         </Box>
     );

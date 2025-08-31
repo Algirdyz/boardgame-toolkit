@@ -1,4 +1,6 @@
+import { ResourceListTemplate } from '@/components/lib/templateTypes';
 import * as fabric from 'fabric';
+import { useRef } from 'react';
 
 const createResourceIcon = (color: string, amount: number, shapeType: 'circle' | 'rect') => {
     let shape;
@@ -32,33 +34,49 @@ const createResourceIcon = (color: string, amount: number, shapeType: 'circle' |
     return new fabric.Group([shape, text]);
 };
 
-export const createResourceList = () => {
-    const resources = [
-        { color: '#8B4513', amount: 1, shape: 'circle' as const }, // Wood
-        { color: 'gray', amount: 2, shape: 'rect' as const },      // Stone
-        { color: 'orange', amount: 5, shape: 'circle' as const }     // Gold
-    ];
+export const useResourceListDef = (canvas: fabric.Canvas | null) => {
+    const resourceListGroup = useRef<fabric.Group | null>(null);
 
-    const spacing = 10;
-    const icons = resources.map((res) => {
-        return createResourceIcon(res.color, res.amount, res.shape);
-    });
+    const updateResourceListDefinition = (_width: number, _height: number, newDef?: ResourceListTemplate) => {
+        if (!canvas) return;
 
-    // Position icons horizontally
-    let currentWidth = 0;
-    for (const icon of icons) {
-        icon.left = currentWidth;
-        currentWidth += (icon.width || 0) + spacing;
-    }
+        let x = newDef?.position.x || 0;
+        let y = newDef?.position.y || 0;
+        if (resourceListGroup.current) {
+            x = resourceListGroup.current.left || x;
+            y = resourceListGroup.current.top || y;
+            canvas.remove(resourceListGroup.current);
+            resourceListGroup.current = null;
+        }
 
-    const group = new fabric.Group(icons, {
-        left: 300,
-        top: 120,
-        cornerColor: 'green',
-        cornerSize: 6,
-        transparentCorners: false,
-        subTargetCheck: true,
-    });
+        if (newDef) {
+            const { resources, spacing } = newDef;
+            const icons = resources.map((res) => {
+                return createResourceIcon(res.color, res.amount, res.shape);
+            });
 
-    return group;
+            // Position icons horizontally
+            let currentWidth = 0;
+            for (const icon of icons) {
+                icon.left = currentWidth;
+                currentWidth += (icon.width || 0) + spacing;
+            }
+
+            const group = new fabric.Group(icons, {
+                left: x,
+                top: y,
+                cornerColor: 'green',
+                cornerSize: 6,
+                transparentCorners: false,
+                subTargetCheck: true,
+            });
+            resourceListGroup.current = group;
+            canvas.add(group);
+        }
+    };
+
+    return {
+        resourceListGroup,
+        updateResourceListDefinition,
+    };
 };

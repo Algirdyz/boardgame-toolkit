@@ -10,43 +10,73 @@ export const getDefaultTemplate = (type: TemplateType): TemplateDefinition => {
             maxCount: 4,
             rows: 1,
             spacing: 10,
-            workerSlotPositions: { x: 0, y: 0 },
+            workerSlotPositions: { x: 100, y: 200 },
+        },
+        nameDefinition: {
+            font: 'Lato',
+            position: { x: 100, y: 50 },
+        },
+        resourceListDefinition: {
+            resources: [
+                { color: '#8B4513', amount: 1, shape: 'circle' as const }, // Wood
+                { color: 'gray', amount: 2, shape: 'rect' as const },      // Stone
+                { color: 'orange', amount: 5, shape: 'circle' as const }     // Gold
+            ],
+            spacing: 10,
+            position: { x: 100, y: 120 },
         }
     }
-
 };
 
-export const getShape = (shape: string, color: string): fabric.Object => {
-    switch (shape) {
-        case '1x1':
-            return new fabric.Rect({
-                width: TILE_SIZE,
-                height: TILE_SIZE,
-                fill: color,
-            });
-        case '2x2':
-            return new fabric.Rect({
-                width: TILE_SIZE * 2,
-                height: TILE_SIZE * 2,
-                fill: color,
-            });
-        case '1x2':
-            return new fabric.Rect({
-                width: TILE_SIZE,
-                height: TILE_SIZE * 2,
-                fill: color,
-            });
-        case 'L':
-            return new fabric.Polygon([
+export const getShape = (shapeType: string, color: string): fabric.Object => {
+    const strokeWidth = 1;
+    const shapeProps = {
+        fill: color,
+        stroke: 'black',
+        strokeWidth,
+        strokePosition: 'outside'
+    };
+
+    let shape: fabric.Object;
+
+    const createRect = (width: number, height: number) => {
+        return new fabric.Rect({
+            width,
+            height,
+        });
+    };
+
+    const createPolygon = (points: { x: number; y: number }[]) => {
+        return new fabric.Polygon(points);
+    };
+
+    switch (shapeType) {
+        case '1x1': {
+            shape = createRect(TILE_SIZE, TILE_SIZE);
+            break;
+        }
+        case '2x2': {
+            shape = createRect(TILE_SIZE * 2, TILE_SIZE * 2);
+            break;
+        }
+        case '1x2': {
+            shape = createRect(TILE_SIZE, TILE_SIZE * 2);
+            break;
+        }
+        case 'L': {
+            const lPoints = [
                 { x: 0, y: 0 },
                 { x: TILE_SIZE * 2, y: 0 },
                 { x: TILE_SIZE * 2, y: TILE_SIZE },
                 { x: TILE_SIZE, y: TILE_SIZE },
                 { x: TILE_SIZE, y: TILE_SIZE * 2 },
                 { x: 0, y: TILE_SIZE * 2 },
-            ], { fill: color });
-        case 'T':
-            return new fabric.Polygon([
+            ];
+            shape = createPolygon(lPoints);
+            break;
+        }
+        case 'T': {
+            const tPoints = [
                 { x: 0, y: 0 },
                 { x: TILE_SIZE * 3, y: 0 },
                 { x: TILE_SIZE * 3, y: TILE_SIZE },
@@ -55,14 +85,19 @@ export const getShape = (shape: string, color: string): fabric.Object => {
                 { x: TILE_SIZE, y: TILE_SIZE * 2 },
                 { x: TILE_SIZE, y: TILE_SIZE },
                 { x: 0, y: TILE_SIZE },
-            ], { fill: color });
-        default:
-            return new fabric.Rect({
-                width: TILE_SIZE,
-                height: TILE_SIZE,
-                fill: color,
-            });
+            ];
+            shape = createPolygon(tPoints);
+            break;
+        }
+        default: {
+            shape = createRect(TILE_SIZE, TILE_SIZE);
+            break;
+        }
     }
+
+    shape.set({ ...shapeProps });
+
+    return shape;
 };
 
 
