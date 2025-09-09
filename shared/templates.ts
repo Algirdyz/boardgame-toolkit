@@ -4,6 +4,7 @@ export interface ComponentPosition {
 }
 
 export interface WorkerTemplate {
+  enabled?: boolean;
   maxCount: number;
   rows: number;
   spacing: number;
@@ -11,6 +12,7 @@ export interface WorkerTemplate {
 }
 
 export interface NameTemplate {
+  enabled?: boolean;
   position: ComponentPosition;
   maxWidth: number;
 }
@@ -22,6 +24,7 @@ export interface Resource {
 }
 
 export interface ResourceListTemplate {
+  enabled?: boolean;
   resources: Resource[];
   spacing: number;
   position: ComponentPosition;
@@ -31,7 +34,6 @@ export interface GridPosition {
   x: number;
   y: number;
 }
-
 
 export interface TemplateDefinition {
   id?: number;

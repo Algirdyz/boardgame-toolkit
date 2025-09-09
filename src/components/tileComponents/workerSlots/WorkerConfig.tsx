@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { WorkerTemplate } from '@shared/templates';
-import { Stack, Title } from '@mantine/core';
 import { useDebouncedCallback } from '@mantine/hooks';
-import LabelSlider from '@/components/simple/labelSlider';
+import { ComponentRow } from '../Component';
+import LabelSlider from '@/components/simple/LabelSlider';
 
 interface WorkerConfigProps {
   definition: WorkerTemplate;
@@ -25,8 +25,15 @@ const WorkerConfig = ({ definition, onChange }: WorkerConfigProps) => {
   };
 
   return (
-    <Stack gap="xs">
-      <Title order={4}>Worker Configuration</Title>
+    <ComponentRow
+      name="Worker Configuration"
+      expanded={localDefinition.enabled}
+      onToggle={(enabled) => {
+        const newDef = { ...localDefinition, enabled };
+        setLocalDefinition(newDef);
+        update(newDef);
+      }}
+    >
       <LabelSlider
         label="Max Worker Slots"
         value={localDefinition.maxCount}
@@ -47,7 +54,7 @@ const WorkerConfig = ({ definition, onChange }: WorkerConfigProps) => {
         onChange={(val) => handleFieldChange('spacing', val)}
         min={0}
       />
-    </Stack>
+    </ComponentRow>
   );
 };
 
