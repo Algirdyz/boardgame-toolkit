@@ -1,0 +1,405 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { GridPosition } from '@shared/templates';
+import * as fabric from 'fabric';
+import { adjacentColor, fillColor, strokeColor, TILE_SIZE } from '@/lib/constants';
+import { generateTiledPolygonVertices } from '@/lib/geometry';
+
+interface UseShapeGeneratorResult {
+  occupiedSquares: Set<string>;
+  adjacentAreas: Set<string>;
+  addSquare: (position: GridPosition) => void;
+  removeSquare: (position: GridPosition) => void;
+  clearShape: () => void;
+  isShapeValid: boolean;
+}
+
+function createClickableSquare(
+  canvas: fabric.Canvas | null,
+  pos: GridPosition,
+  addSquare: (position: GridPosition) => void,
+  editLocked: boolean = false
+) {
+  const rect = new fabric.Rect({
+    left: 0,
+    top: 0,
+    width: TILE_SIZE,
+    height: TILE_SIZE,
+    fill: 'rgba(0,0,0,0)',
+    stroke: strokeColor,
+    strokeWidth: 1,
+    strokeDashArray: [TILE_SIZE / 19, TILE_SIZE / 19],
+    selectable: false,
+    evented: !editLocked,
+    hoverCursor: editLocked ? 'default' : 'pointer',
+    objectCaching: false,
+  });
+
+  // Create plus sign lines (relative to rect)
+  const centerX = TILE_SIZE / 2;
+  const centerY = TILE_SIZE / 2;
+  const plusSize = TILE_SIZE * 0.3; // 30% of tile size
+
+  const horizontalLine = new fabric.Line(
+    [centerX - plusSize / 2, centerY, centerX + plusSize / 2, centerY],
+    {
+      stroke: strokeColor,
+      strokeWidth: 3,
+      opacity: 0,
+      selectable: false,
+      evented: false,
+      objectCaching: false,
+    }
+  );
+
+  const verticalLine = new fabric.Line(
+    [centerX, centerY - plusSize / 2, centerX, centerY + plusSize / 2],
+    {
+      stroke: strokeColor,
+      strokeWidth: 3,
+      opacity: 0,
+      selectable: false,
+      evented: false,
+      objectCaching: false,
+    }
+  );
+
+  // Create a group with all elements
+  const group = new fabric.Group([rect, horizontalLine, verticalLine], {
+    left: pos.x * TILE_SIZE,
+    top: pos.y * TILE_SIZE,
+    selectable: false,
+    evented: !editLocked,
+    hoverCursor: editLocked ? 'default' : 'pointer',
+    objectCaching: false,
+  });
+
+  if (!editLocked) {
+    group.on('mouseover', () => {
+      rect.set('fill', adjacentColor);
+      horizontalLine.set('opacity', 1);
+      verticalLine.set('opacity', 1);
+      canvas?.renderAll();
+    });
+
+    group.on('mouseout', () => {
+      rect.set('fill', 'rgba(0,0,0,0)');
+      horizontalLine.set('opacity', 0);
+      verticalLine.set('opacity', 0);
+      canvas?.renderAll();
+    });
+
+    group.on('mousedown', () => {
+      addSquare(pos);
+    });
+  }
+
+  return group;
+}
+
+function createPolygonalShape(points: GridPosition[]) {
+  const vertices = generateTiledPolygonVertices(points, TILE_SIZE);
+  const fabricPoints = vertices.map((p) => new fabric.Point(p.x, p.y));
+  return new fabric.Polygon(fabricPoints, {
+    fill: fillColor,
+    stroke: strokeColor,
+    strokeWidth: 2,
+    selectable: false,
+    evented: false,
+  });
+}
+
+function createInvisibleTriggerSquare(
+  canvas: fabric.Canvas | null,
+  pos: GridPosition,
+  removeSquare: (position: GridPosition) => void,
+  editLocked: boolean = false
+) {
+  // Create invisible trigger area
+  const triggerRect = new fabric.Rect({
+    left: 0,
+    top: 0,
+    width: TILE_SIZE,
+    height: TILE_SIZE,
+    fill: 'transparent',
+    stroke: 'transparent',
+    selectable: false,
+    evented: !editLocked,
+    hoverCursor: editLocked ? 'default' : 'pointer',
+    objectCaching: false,
+  });
+
+  // Create X sign lines (relative to rect)
+  const centerX = TILE_SIZE / 2;
+  const centerY = TILE_SIZE / 2;
+  const xSize = TILE_SIZE * 0.3; // 30% of tile size
+
+  const diagonalLine1 = new fabric.Line(
+    [centerX - xSize / 2, centerY - xSize / 2, centerX + xSize / 2, centerY + xSize / 2],
+    {
+      stroke: strokeColor,
+      strokeWidth: 3,
+      opacity: 0,
+      selectable: false,
+      evented: false,
+      objectCaching: false,
+    }
+  );
+
+  const diagonalLine2 = new fabric.Line(
+    [centerX - xSize / 2, centerY + xSize / 2, centerX + xSize / 2, centerY - xSize / 2],
+    {
+      stroke: strokeColor,
+      strokeWidth: 3,
+      opacity: 0,
+      selectable: false,
+      evented: false,
+      objectCaching: false,
+    }
+  );
+
+  // Create a group with all elements
+  const group = new fabric.Group([triggerRect, diagonalLine1, diagonalLine2], {
+    left: pos.x * TILE_SIZE,
+    top: pos.y * TILE_SIZE,
+    selectable: false,
+    evented: !editLocked,
+    hoverCursor: editLocked ? 'default' : 'pointer',
+    objectCaching: false,
+  });
+
+  if (!editLocked) {
+    group.on('mouseover', () => {
+      diagonalLine1.set('opacity', 1);
+      diagonalLine2.set('opacity', 1);
+      canvas?.renderAll();
+    });
+
+    group.on('mouseout', () => {
+      diagonalLine1.set('opacity', 0);
+      diagonalLine2.set('opacity', 0);
+      canvas?.renderAll();
+    });
+
+    group.on('mousedown', (e) => {
+      const event = e.e as MouseEvent;
+      event.preventDefault();
+      removeSquare(pos);
+    });
+  }
+
+  return group;
+}
+
+export default function useShapeGenerator(
+  canvas: fabric.Canvas | null,
+  shape: GridPosition[],
+  onShapeChange: (shape: GridPosition[]) => void,
+  editLocked: boolean = false
+): UseShapeGeneratorResult {
+  const [adjacentAreas, setAdjacentAreas] = useState<Set<string>>(new Set());
+  const shapeObjectsRef = useRef<Map<string, fabric.Object>>(new Map());
+  const adjacentObjectsRef = useRef<Map<string, fabric.Object>>(new Map());
+
+  // Helper function to convert position to string key
+  const positionKey = useCallback((pos: GridPosition): string => {
+    return `${pos.x},${pos.y}`;
+  }, []);
+
+  // Helper function to convert string key to position
+  const keyToPosition = useCallback((key: string): GridPosition => {
+    const [x, y] = key.split(',').map(Number);
+    return { x, y };
+  }, []);
+
+  const occupiedSquares = useMemo(() => {
+    console.log('Calculating occupied squares from shape:', shape);
+    if (!shape || shape.length === 0) {
+      return new Set<string>(['0,0']); // Default to single square at origin
+    }
+    const newSq = new Set<string>();
+    for (const pos of shape) {
+      newSq.add(positionKey(pos));
+    }
+    return newSq;
+  }, [shape, positionKey]);
+
+  // Calculate adjacent positions (no diagonal connections)
+  const getAdjacentPositions = useCallback((pos: GridPosition): GridPosition[] => {
+    return [
+      { x: pos.x + 1, y: pos.y },
+      { x: pos.x - 1, y: pos.y },
+      { x: pos.x, y: pos.y + 1 },
+      { x: pos.x, y: pos.y - 1 },
+    ];
+  }, []);
+
+  // Update adjacent areas based on occupied squares
+  const updateAdjacentAreas = useCallback(() => {
+    const newAdjacent = new Set<string>();
+
+    occupiedSquares.forEach((key) => {
+      const pos = keyToPosition(key);
+      const adjacentPositions = getAdjacentPositions(pos);
+
+      adjacentPositions.forEach((adjPos) => {
+        const adjKey = positionKey(adjPos);
+        if (!occupiedSquares.has(adjKey)) {
+          newAdjacent.add(adjKey);
+        }
+      });
+    });
+
+    setAdjacentAreas(newAdjacent);
+  }, [occupiedSquares, getAdjacentPositions, keyToPosition, positionKey]);
+
+  // Add a square to the shape
+  const addSquare = useCallback(
+    (position: GridPosition) => {
+      if (editLocked) return; // Don't allow adding when edit is locked
+
+      const key = positionKey(position);
+
+      if (occupiedSquares.has(key)) {
+        return; // Already occupied
+      }
+
+      // Check if the position is adjacent to existing squares
+      if (occupiedSquares.size > 0) {
+        const isAdjacent = Array.from(occupiedSquares).some((occupiedKey) => {
+          const occupiedPos = keyToPosition(occupiedKey);
+          const adjacentPositions = getAdjacentPositions(occupiedPos);
+          return adjacentPositions.some(
+            (adjPos) => adjPos.x === position.x && adjPos.y === position.y
+          );
+        });
+
+        if (!isAdjacent) {
+          return; // Not adjacent to existing shape
+        }
+      }
+
+      onShapeChange([...Array.from(occupiedSquares).map((key) => keyToPosition(key)), position]);
+    },
+    [editLocked, occupiedSquares, onShapeChange, positionKey, keyToPosition, getAdjacentPositions]
+  );
+
+  // Remove a square from the shape
+  const removeSquare = useCallback(
+    (position: GridPosition) => {
+      if (editLocked) return; // Don't allow removing when edit is locked
+
+      const key = positionKey(position);
+
+      if (!occupiedSquares.has(key) || occupiedSquares.size <= 1) {
+        return; // Can't remove if not occupied or if it's the last square
+      }
+
+      // Check if removing this square would disconnect the shape
+      const remainingSquares = new Set(occupiedSquares);
+      remainingSquares.delete(key);
+
+      // Simple connectivity check using BFS
+      const isConnected = () => {
+        if (remainingSquares.size === 0) return true;
+
+        const visited = new Set<string>();
+        const queue = [Array.from(remainingSquares)[0]];
+        visited.add(queue[0]);
+
+        while (queue.length > 0) {
+          const currentKey = queue.shift()!;
+          const currentPos = keyToPosition(currentKey);
+          const adjacentPositions = getAdjacentPositions(currentPos);
+
+          adjacentPositions.forEach((adjPos) => {
+            const adjKey = positionKey(adjPos);
+            if (remainingSquares.has(adjKey) && !visited.has(adjKey)) {
+              visited.add(adjKey);
+              queue.push(adjKey);
+            }
+          });
+        }
+
+        return visited.size === remainingSquares.size;
+      };
+
+      if (isConnected()) {
+        onShapeChange(Array.from(remainingSquares).map((key) => keyToPosition(key)));
+      }
+    },
+    [editLocked, occupiedSquares, positionKey, keyToPosition, getAdjacentPositions]
+  );
+
+  // Clear the entire shape
+  const clearShape = useCallback(() => {
+    if (editLocked) return; // Don't allow clearing when edit is locked
+    onShapeChange([{ x: 0, y: 0 }]); // Reset to single square at origin
+  }, [editLocked, onShapeChange]);
+
+  // Check if current shape is valid (connected)
+  const isShapeValid = occupiedSquares.size > 0;
+
+  // Render shape on canvas
+  useEffect(() => {
+    if (!canvas) return;
+
+    // Clear previous objects
+    shapeObjectsRef.current.forEach((obj) => canvas.remove(obj));
+    adjacentObjectsRef.current.forEach((obj) => canvas.remove(obj));
+    shapeObjectsRef.current.clear();
+    adjacentObjectsRef.current.clear();
+
+    // Create the main polygon shape
+    if (occupiedSquares.size > 0) {
+      const polygon = createPolygonalShape(
+        Array.from(occupiedSquares).map((key) => keyToPosition(key))
+      );
+      canvas.add(polygon);
+      shapeObjectsRef.current.set('polygon', polygon);
+    }
+
+    // Create invisible trigger squares for each occupied position
+    occupiedSquares.forEach((key) => {
+      const pos = keyToPosition(key);
+      const triggerSquare = createInvisibleTriggerSquare(canvas, pos, removeSquare, editLocked);
+      canvas.add(triggerSquare);
+      shapeObjectsRef.current.set(key, triggerSquare);
+    });
+
+    // Render adjacent clickable areas (only if not edit locked)
+    if (!editLocked) {
+      adjacentAreas.forEach((key) => {
+        const pos = keyToPosition(key);
+        const square = createClickableSquare(canvas, pos, addSquare, editLocked);
+        canvas.add(square);
+        adjacentObjectsRef.current.set(key, square);
+      });
+    }
+
+    canvas.renderAll();
+  }, [canvas, occupiedSquares, adjacentAreas, keyToPosition, addSquare, removeSquare, editLocked]);
+
+  // Update adjacent areas when occupied squares change
+  useEffect(() => {
+    updateAdjacentAreas();
+  }, [updateAdjacentAreas]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (canvas) {
+        shapeObjectsRef.current.forEach((obj) => canvas.remove(obj));
+        adjacentObjectsRef.current.forEach((obj) => canvas.remove(obj));
+      }
+    };
+  }, [canvas]);
+
+  return {
+    occupiedSquares,
+    adjacentAreas,
+    addSquare,
+    removeSquare,
+    clearShape,
+    isShapeValid,
+  };
+}
