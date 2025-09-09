@@ -1,9 +1,0 @@
-.root {
-    height: 100vh;
-}
-
-.main {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-}
