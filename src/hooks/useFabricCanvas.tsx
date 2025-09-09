@@ -1,4 +1,4 @@
-import { useRef, useEffect, RefObject } from 'react';
+import { RefObject, useEffect, useRef } from 'react';
 import * as fabric from 'fabric';
 
 interface UseFabricCanvasResult {
@@ -22,12 +22,6 @@ const useFabricCanvas = (width: number, height: number): UseFabricCanvasResult =
         fireRightClick: true,
         stopContextMenu: true,
       });
-
-      // Set the coordinate system so (0, 0) is in the center
-      const canvas = canvasRef.current;
-      const centerX = width / 2;
-      const centerY = height / 2;
-      canvas.setViewportTransform([1, 0, 0, 1, centerX, centerY]);
     }
 
     return () => {
@@ -40,6 +34,7 @@ const useFabricCanvas = (width: number, height: number): UseFabricCanvasResult =
     const canvas = canvasRef.current;
     if (canvas) {
       canvas.setDimensions({ width, height });
+
       canvas.renderAll();
     }
   }, [width, height]);

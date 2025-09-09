@@ -108,6 +108,23 @@ function createPolygonalShape(points: GridPosition[]) {
   });
 }
 
+function panCanvasToObject(canvas: fabric.Canvas, object: fabric.Object): boolean {
+  // Check if canvas is properly initialized
+  if (!canvas.width || !canvas.height || canvas.width <= 0 || canvas.height <= 0) {
+    return false; // Canvas not ready
+  }
+
+  const zoom = canvas.getZoom();
+  const vpw = canvas.width / zoom;
+  const vph = canvas.height / zoom;
+  const center = object.getCenterPoint();
+  const x = center.x - vpw / 2;
+  const y = center.y - vph / 2;
+  canvas.absolutePan(new fabric.Point(x, y));
+  canvas.setZoom(zoom);
+  return true; // Successfully panned
+}
+
 function createInvisibleTriggerSquare(
   canvas: fabric.Canvas | null,
   pos: GridPosition,
@@ -199,6 +216,7 @@ export default function useShapeGenerator(
   const [adjacentAreas, setAdjacentAreas] = useState<Set<string>>(new Set());
   const shapeObjectsRef = useRef<Map<string, fabric.Object>>(new Map());
   const adjacentObjectsRef = useRef<Map<string, fabric.Object>>(new Map());
+  const hasInitiallyPannedRef = useRef<boolean>(false);
 
   // Helper function to convert position to string key
   const positionKey = useCallback((pos: GridPosition): string => {
@@ -212,7 +230,6 @@ export default function useShapeGenerator(
   }, []);
 
   const occupiedSquares = useMemo(() => {
-    console.log('Calculating occupied squares from shape:', shape);
     if (!shape || shape.length === 0) {
       return new Set<string>(['0,0']); // Default to single square at origin
     }
@@ -355,6 +372,15 @@ export default function useShapeGenerator(
         Array.from(occupiedSquares).map((key) => keyToPosition(key))
       );
       canvas.add(polygon);
+
+      // Only pan to object once on initial load, but retry if canvas wasn't ready
+      if (!hasInitiallyPannedRef.current) {
+        const panSucceeded = panCanvasToObject(canvas, polygon);
+        if (panSucceeded) {
+          hasInitiallyPannedRef.current = true;
+        }
+      }
+
       shapeObjectsRef.current.set('polygon', polygon);
     }
 
