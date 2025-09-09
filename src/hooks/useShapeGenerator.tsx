@@ -73,6 +73,9 @@ function createClickableSquare(
     objectCaching: false,
   });
 
+  // Mark as shape-related for z-index management
+  group.set('isShapeRelated', true);
+
   if (!editLocked) {
     group.on('mouseover', () => {
       rect.set('fill', adjacentColor);
@@ -99,13 +102,17 @@ function createClickableSquare(
 function createPolygonalShape(points: GridPosition[]) {
   const vertices = generateTiledPolygonVertices(points, TILE_SIZE);
   const fabricPoints = vertices.map((p) => new fabric.Point(p.x, p.y));
-  return new fabric.Polygon(fabricPoints, {
+  const polygon = new fabric.Polygon(fabricPoints, {
     fill: fillColor,
     stroke: strokeColor,
     strokeWidth: 2,
     selectable: false,
     evented: false,
   });
+
+  // Mark as shape-related for z-index management
+  polygon.set('isShapeRelated', true);
+  return polygon;
 }
 
 function panCanvasToObject(canvas: fabric.Canvas, object: fabric.Object): boolean {
@@ -184,6 +191,9 @@ function createInvisibleTriggerSquare(
     objectCaching: false,
   });
 
+  // Mark as shape-related for z-index management
+  group.set('isShapeRelated', true);
+
   if (!editLocked) {
     group.on('mouseover', () => {
       diagonalLine1.set('opacity', 1);
@@ -211,7 +221,8 @@ export default function useShapeGenerator(
   canvas: fabric.Canvas | null,
   shape: GridPosition[],
   onShapeChange: (shape: GridPosition[]) => void,
-  editLocked: boolean = false
+  editLocked: boolean = false,
+  enforceZOrder?: () => void
 ): UseShapeGeneratorResult {
   const [adjacentAreas, setAdjacentAreas] = useState<Set<string>>(new Set());
   const shapeObjectsRef = useRef<Map<string, fabric.Object>>(new Map());
@@ -403,7 +414,21 @@ export default function useShapeGenerator(
     }
 
     canvas.renderAll();
-  }, [canvas, occupiedSquares, adjacentAreas, keyToPosition, addSquare, removeSquare, editLocked]);
+
+    // Enforce z-order after rendering shape elements
+    if (enforceZOrder) {
+      enforceZOrder();
+    }
+  }, [
+    canvas,
+    occupiedSquares,
+    adjacentAreas,
+    keyToPosition,
+    addSquare,
+    removeSquare,
+    editLocked,
+    enforceZOrder,
+  ]);
 
   // Update adjacent areas when occupied squares change
   useEffect(() => {

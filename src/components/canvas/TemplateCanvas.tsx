@@ -2,6 +2,7 @@ import { TemplateDefinition } from '@shared/templates';
 import { useCanvasInteractions } from '@/hooks/useCanvasInteractions';
 import useFabricCanvas from '@/hooks/useFabricCanvas';
 import useShapeGenerator from '@/hooks/useShapeGenerator';
+import { useTemplateComponents } from '@/hooks/useTemplateComponents';
 
 interface TemplateCanvasProps {
   width: number;
@@ -21,6 +22,15 @@ export default function TemplateCanvas(props: TemplateCanvasProps) {
     zoomEnabled: true,
   });
 
+  // Handle all template components (worker slots, name, resource list, etc.)
+  const { enforceZOrder } = useTemplateComponents({
+    canvas: canvasRef.current,
+    canvasWidth: width,
+    canvasHeight: height,
+    template,
+    onTemplateChange,
+  });
+
   useShapeGenerator(
     canvasRef.current,
     template.shape,
@@ -28,7 +38,8 @@ export default function TemplateCanvas(props: TemplateCanvasProps) {
       const updatedTemplate: TemplateDefinition = { ...props.template, shape: newShape };
       onTemplateChange(updatedTemplate);
     },
-    editLocked
+    editLocked,
+    enforceZOrder
   );
 
   return <canvas ref={canvasHtmlRef} />;
