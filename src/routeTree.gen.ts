@@ -13,7 +13,9 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TemplatesIndexRouteImport } from './routes/templates/index'
 import { Route as GlobalsIndexRouteImport } from './routes/globals/index'
+import { Route as ComponentsIndexRouteImport } from './routes/components/index'
 import { Route as TemplatesTemplateIdRouteImport } from './routes/templates/$templateId'
+import { Route as ComponentsComponentIdRouteImport } from './routes/components/$componentId'
 
 const AboutRoute = AboutRouteImport.update({
   id: '/about',
@@ -35,23 +37,37 @@ const GlobalsIndexRoute = GlobalsIndexRouteImport.update({
   path: '/globals/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ComponentsIndexRoute = ComponentsIndexRouteImport.update({
+  id: '/components/',
+  path: '/components/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TemplatesTemplateIdRoute = TemplatesTemplateIdRouteImport.update({
   id: '/templates/$templateId',
   path: '/templates/$templateId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ComponentsComponentIdRoute = ComponentsComponentIdRouteImport.update({
+  id: '/components/$componentId',
+  path: '/components/$componentId',
   getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/components/$componentId': typeof ComponentsComponentIdRoute
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
+  '/components': typeof ComponentsIndexRoute
   '/globals': typeof GlobalsIndexRoute
   '/templates': typeof TemplatesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/components/$componentId': typeof ComponentsComponentIdRoute
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
+  '/components': typeof ComponentsIndexRoute
   '/globals': typeof GlobalsIndexRoute
   '/templates': typeof TemplatesIndexRoute
 }
@@ -59,7 +75,9 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/components/$componentId': typeof ComponentsComponentIdRoute
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
+  '/components/': typeof ComponentsIndexRoute
   '/globals/': typeof GlobalsIndexRoute
   '/templates/': typeof TemplatesIndexRoute
 }
@@ -68,16 +86,27 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/about'
+    | '/components/$componentId'
     | '/templates/$templateId'
+    | '/components'
     | '/globals'
     | '/templates'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about' | '/templates/$templateId' | '/globals' | '/templates'
+  to:
+    | '/'
+    | '/about'
+    | '/components/$componentId'
+    | '/templates/$templateId'
+    | '/components'
+    | '/globals'
+    | '/templates'
   id:
     | '__root__'
     | '/'
     | '/about'
+    | '/components/$componentId'
     | '/templates/$templateId'
+    | '/components/'
     | '/globals/'
     | '/templates/'
   fileRoutesById: FileRoutesById
@@ -85,7 +114,9 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
+  ComponentsComponentIdRoute: typeof ComponentsComponentIdRoute
   TemplatesTemplateIdRoute: typeof TemplatesTemplateIdRoute
+  ComponentsIndexRoute: typeof ComponentsIndexRoute
   GlobalsIndexRoute: typeof GlobalsIndexRoute
   TemplatesIndexRoute: typeof TemplatesIndexRoute
 }
@@ -120,11 +151,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GlobalsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/components/': {
+      id: '/components/'
+      path: '/components'
+      fullPath: '/components'
+      preLoaderRoute: typeof ComponentsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/templates/$templateId': {
       id: '/templates/$templateId'
       path: '/templates/$templateId'
       fullPath: '/templates/$templateId'
       preLoaderRoute: typeof TemplatesTemplateIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/components/$componentId': {
+      id: '/components/$componentId'
+      path: '/components/$componentId'
+      fullPath: '/components/$componentId'
+      preLoaderRoute: typeof ComponentsComponentIdRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -133,7 +178,9 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
+  ComponentsComponentIdRoute: ComponentsComponentIdRoute,
   TemplatesTemplateIdRoute: TemplatesTemplateIdRoute,
+  ComponentsIndexRoute: ComponentsIndexRoute,
   GlobalsIndexRoute: GlobalsIndexRoute,
   TemplatesIndexRoute: TemplatesIndexRoute,
 }

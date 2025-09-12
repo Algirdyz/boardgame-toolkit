@@ -2,7 +2,13 @@
 'use client';
 
 import { Group, NavLink } from '@mantine/core';
-import { IconGlobe, IconHome, IconPlus, IconSettings, IconTemplate } from '@tabler/icons-react';
+import {
+  IconComponents,
+  IconGlobe,
+  IconHome,
+  IconSettings,
+  IconTemplate,
+} from '@tabler/icons-react';
 import { Link } from '@tanstack/react-router';
 
 export function GlobalNavbar() {
@@ -32,9 +38,9 @@ export function GlobalNavbar() {
       <NavLink
         w="fit-content"
         component={Link}
-        to="/component"
+        to="/components"
         label="Components"
-        leftSection={<IconPlus size="1rem" stroke={1.5} />}
+        leftSection={<IconComponents size="1rem" stroke={1.5} />}
       />
 
       <NavLink

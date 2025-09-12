@@ -1,4 +1,5 @@
 import Fastify from 'fastify';
+import { componentRoutes } from './routes/componentRoutes';
 import globalRoutes from './routes/globalRoutes';
 import templateRoutes from './routes/templateRoutes';
 
@@ -8,6 +9,7 @@ const fastify = Fastify({
 
 fastify.register(templateRoutes);
 fastify.register(globalRoutes);
+fastify.register(componentRoutes);
 
 const start = async () => {
   try {
