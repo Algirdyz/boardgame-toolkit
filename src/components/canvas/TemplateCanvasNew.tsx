@@ -21,15 +21,7 @@ export default function TemplateCanvas(props: TemplateCanvasProps) {
     zoomEnabled: true,
   });
 
-  // Handle all template components (worker slots, name, resource list, etc.)
-  // const { enforceZOrder } = useTemplateComponents({
-  //   canvas: canvasRef.current,
-  //   canvasWidth: width,
-  //   canvasHeight: height,
-  //   template,
-  //   onTemplateChange,
-  // });
-
+  // For now, just handle the shape. Component rendering will be added later.
   useShapeGenerator(
     canvasRef.current,
     template.shape,
@@ -37,8 +29,12 @@ export default function TemplateCanvas(props: TemplateCanvasProps) {
       const updatedTemplate: TemplateDefinition = { ...props.template, shape: newShape };
       onTemplateChange(updatedTemplate);
     },
-    editLocked
+    editLocked,
+    () => {} // No z-order enforcement needed for shape only
   );
+
+  // TODO: Add component rendering here based on template.components
+  // This will be implemented when we add canvas interaction for positioning
 
   return <canvas ref={canvasHtmlRef} />;
 }

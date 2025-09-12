@@ -1,3 +1,5 @@
+import { ComponentTemplateSpecs } from './components';
+
 export interface ComponentPosition {
   x: number;
   y: number;
@@ -39,7 +41,10 @@ export interface TemplateDefinition {
   id?: number;
   shape: GridPosition[];
   name: string;
-  workerDefinition: WorkerTemplate;
-  nameDefinition: NameTemplate;
-  resourceListDefinition: ResourceListTemplate;
+  components: {
+    [componentInstanceId: string]: {
+      componentId: number;
+      templateSpecs: ComponentTemplateSpecs;
+    };
+  };
 }

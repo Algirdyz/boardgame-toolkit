@@ -43,23 +43,7 @@ function Templates() {
     const defaultTemplate: TemplateDefinition = {
       name,
       shape: [{ x: 0, y: 0 }],
-      workerDefinition: {
-        enabled: true,
-        maxCount: 5,
-        rows: 1,
-        spacing: 10,
-        workerSlotPositions: { x: 10, y: 10 },
-      },
-      nameDefinition: { enabled: true, position: { x: 10, y: 50 }, maxWidth: 100 },
-      resourceListDefinition: {
-        enabled: true,
-        resources: [
-          { color: 'red', amount: 2, shape: 'circle' },
-          { color: 'blue', amount: 1, shape: 'rect' },
-        ],
-        spacing: 10,
-        position: { x: 10, y: 10 },
-      },
+      components: {},
     };
     const savedTemplate = await save.mutateAsync(defaultTemplate);
     close();
