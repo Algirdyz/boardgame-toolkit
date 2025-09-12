@@ -14,6 +14,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as VariablesIndexRouteImport } from './routes/variables/index'
 import { Route as TemplatesIndexRouteImport } from './routes/templates/index'
 import { Route as ComponentsIndexRouteImport } from './routes/components/index'
+import { Route as VariablesVariableTypeRouteImport } from './routes/variables/$variableType'
 import { Route as TemplatesTemplateIdRouteImport } from './routes/templates/$templateId'
 import { Route as ComponentsComponentIdRouteImport } from './routes/components/$componentId'
 
@@ -42,6 +43,11 @@ const ComponentsIndexRoute = ComponentsIndexRouteImport.update({
   path: '/components/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const VariablesVariableTypeRoute = VariablesVariableTypeRouteImport.update({
+  id: '/variables/$variableType',
+  path: '/variables/$variableType',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TemplatesTemplateIdRoute = TemplatesTemplateIdRouteImport.update({
   id: '/templates/$templateId',
   path: '/templates/$templateId',
@@ -58,6 +64,7 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/components/$componentId': typeof ComponentsComponentIdRoute
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
+  '/variables/$variableType': typeof VariablesVariableTypeRoute
   '/components': typeof ComponentsIndexRoute
   '/templates': typeof TemplatesIndexRoute
   '/variables': typeof VariablesIndexRoute
@@ -67,6 +74,7 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/components/$componentId': typeof ComponentsComponentIdRoute
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
+  '/variables/$variableType': typeof VariablesVariableTypeRoute
   '/components': typeof ComponentsIndexRoute
   '/templates': typeof TemplatesIndexRoute
   '/variables': typeof VariablesIndexRoute
@@ -77,6 +85,7 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/components/$componentId': typeof ComponentsComponentIdRoute
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
+  '/variables/$variableType': typeof VariablesVariableTypeRoute
   '/components/': typeof ComponentsIndexRoute
   '/templates/': typeof TemplatesIndexRoute
   '/variables/': typeof VariablesIndexRoute
@@ -88,6 +97,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/components/$componentId'
     | '/templates/$templateId'
+    | '/variables/$variableType'
     | '/components'
     | '/templates'
     | '/variables'
@@ -97,6 +107,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/components/$componentId'
     | '/templates/$templateId'
+    | '/variables/$variableType'
     | '/components'
     | '/templates'
     | '/variables'
@@ -106,6 +117,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/components/$componentId'
     | '/templates/$templateId'
+    | '/variables/$variableType'
     | '/components/'
     | '/templates/'
     | '/variables/'
@@ -116,6 +128,7 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   ComponentsComponentIdRoute: typeof ComponentsComponentIdRoute
   TemplatesTemplateIdRoute: typeof TemplatesTemplateIdRoute
+  VariablesVariableTypeRoute: typeof VariablesVariableTypeRoute
   ComponentsIndexRoute: typeof ComponentsIndexRoute
   TemplatesIndexRoute: typeof TemplatesIndexRoute
   VariablesIndexRoute: typeof VariablesIndexRoute
@@ -158,6 +171,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ComponentsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/variables/$variableType': {
+      id: '/variables/$variableType'
+      path: '/variables/$variableType'
+      fullPath: '/variables/$variableType'
+      preLoaderRoute: typeof VariablesVariableTypeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/templates/$templateId': {
       id: '/templates/$templateId'
       path: '/templates/$templateId'
@@ -180,6 +200,7 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   ComponentsComponentIdRoute: ComponentsComponentIdRoute,
   TemplatesTemplateIdRoute: TemplatesTemplateIdRoute,
+  VariablesVariableTypeRoute: VariablesVariableTypeRoute,
   ComponentsIndexRoute: ComponentsIndexRoute,
   TemplatesIndexRoute: TemplatesIndexRoute,
   VariablesIndexRoute: VariablesIndexRoute,

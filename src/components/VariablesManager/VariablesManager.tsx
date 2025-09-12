@@ -1,22 +1,9 @@
 import { useState } from 'react';
 import { Variable, VariableType } from '@shared/variables';
-import {
-  Alert,
-  Center,
-  Container,
-  Loader,
-  Stack,
-  Tabs,
-  Text,
-  Title,
-} from '@mantine/core';
+import { Alert, Center, Container, Loader, Stack, Tabs, Text, Title } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import {
-  IconPalette,
-  IconRuler,
-  IconShape,
-  IconTag,
-} from '@tabler/icons-react';
+import { IconPalette, IconRuler, IconShape, IconTag } from '@tabler/icons-react';
+import { useNavigate, useParams } from '@tanstack/react-router';
 import { useVariablesManager } from './useVariablesManager';
 import { VariableList } from './VariableList';
 import { VariableModalManager } from './VariableModalManager';
@@ -24,7 +11,16 @@ import { VariableModalManager } from './VariableModalManager';
 export function VariablesManager() {
   const [editingVariable, setEditingVariable] = useState<Variable | null>(null);
   const [editingType, setEditingType] = useState<VariableType | null>(null);
-  const [activeTab, setActiveTab] = useState<string>('colors');
+
+  const navigate = useNavigate();
+  const params = useParams({ strict: false });
+
+  // Get the current tab from URL params, default to 'colors'
+  const currentTab = (params as any)?.variableType || 'colors';
+
+  // Validate that the tab is a valid variable type
+  const validTabs = ['colors', 'shapes', 'dimensions', 'names'];
+  const activeTab = validTabs.includes(currentTab) ? currentTab : 'colors';
 
   const [colorModalOpened, { open: openColorModal, close: closeColorModal }] = useDisclosure(false);
   const [shapeModalOpened, { open: openShapeModal, close: closeShapeModal }] = useDisclosure(false);
@@ -33,6 +29,16 @@ export function VariablesManager() {
   const [nameModalOpened, { open: openNameModal, close: closeNameModal }] = useDisclosure(false);
 
   const { variables, saveMutation, deleteMutation } = useVariablesManager();
+
+  // Handle tab changes by navigating to the appropriate URL
+  const handleTabChange = (value: string | null) => {
+    if (value && validTabs.includes(value)) {
+      navigate({
+        to: '/variables/$variableType',
+        params: { variableType: value },
+      });
+    }
+  };
 
   const handleAdd = (type: VariableType) => {
     setEditingVariable(null);
@@ -110,7 +116,7 @@ export function VariablesManager() {
           </Text>
         </div>
 
-        <Tabs value={activeTab} onChange={(value) => setActiveTab(value || 'colors')}>
+        <Tabs value={activeTab} onChange={handleTabChange}>
           <Tabs.List>
             <Tabs.Tab value="colors" leftSection={<IconPalette size={16} />}>
               Colors

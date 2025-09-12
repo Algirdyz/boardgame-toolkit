@@ -1,10 +1,10 @@
-import { createFileRoute } from '@tanstack/react-router';
-import { VariablesManager } from '@/components/VariablesManager/VariablesManager';
+import { createFileRoute, redirect } from '@tanstack/react-router';
 
 export const Route = createFileRoute('/variables/')({
-  component: RouteComponent,
+  beforeLoad: () => {
+    throw redirect({
+      to: '/variables/$variableType',
+      params: { variableType: 'colors' },
+    });
+  },
 });
-
-function RouteComponent() {
-  return <VariablesManager />;
-}
