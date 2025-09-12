@@ -5,7 +5,7 @@ import {
   getComponent as dbGetComponent,
   getComponents as dbGetComponents,
   saveComponent as dbSaveComponent,
-} from '../lib/db';
+} from '../lib/componentsDb';
 
 export async function componentRoutes(fastify: FastifyInstance) {
   // Get all components

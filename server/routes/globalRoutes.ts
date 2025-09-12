@@ -1,6 +1,10 @@
 import { GlobalVariable, GlobalVariableType } from '@shared/globals';
 import { FastifyInstance } from 'fastify';
-import { deleteGlobalVariable, getGlobalVariables, saveGlobalVariable } from '../lib/db';
+import {
+  deleteGlobalVariable,
+  getGlobalVariables,
+  saveGlobalVariable,
+} from '../lib/globalVariablesDb';
 
 export default async function (fastify: FastifyInstance) {
   // Get all global variables

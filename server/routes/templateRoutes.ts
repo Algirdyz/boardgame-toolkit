@@ -1,6 +1,12 @@
-import { FastifyInstance } from 'fastify';
-import { getTemplates, getTemplate, saveTemplate, deleteTemplate, createTemplate } from '../lib/db';
 import { TemplateDefinition } from '@shared/templates';
+import { FastifyInstance } from 'fastify';
+import {
+  createTemplate,
+  deleteTemplate,
+  getTemplate,
+  getTemplates,
+  saveTemplate,
+} from '../lib/templatesDb';
 
 export default async function (fastify: FastifyInstance) {
   fastify.get('/api/templates', async (_request, reply) => {
@@ -22,7 +28,7 @@ export default async function (fastify: FastifyInstance) {
         return {
           id: template.templateId,
           ...template.definition,
-        }
+        };
       }
       return reply.status(404).send({ message: 'Template not found' });
     } catch (error) {
