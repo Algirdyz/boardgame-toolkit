@@ -31,6 +31,7 @@ import { deleteGlobalVariable, getGlobalVariables, saveGlobalVariable } from '..
 import { ColorVariableModal } from './modals/ColorVariableModal';
 import { DimensionVariableModal } from './modals/DimensionVariableModal';
 import { NameVariableModal } from './modals/NameVariableModal';
+import { ShapePreview } from './modals/ShapePreview';
 import { ShapeVariableModal } from './modals/ShapeVariableModal';
 
 export function GlobalVariablesManager() {
@@ -183,9 +184,14 @@ export function GlobalVariablesManager() {
         case 'shapes': {
           const shape = variable as any;
           return (
-            <Badge variant="light">
-              {shape.type}: {shape.value}
-            </Badge>
+            <Group gap="xs">
+              <div style={{ width: 40, height: 40 }}>
+                <ShapePreview type={shape.type} value={shape.value} width={40} height={40} />
+              </div>
+              <Badge variant="light">
+                {shape.type}: {shape.value}
+              </Badge>
+            </Group>
           );
         }
         case 'dimensions': {

@@ -1,7 +1,19 @@
 import { useEffect, useState } from 'react';
 import { GlobalShape } from '@shared/globals';
-import { Button, Group, Modal, Select, Stack, Text, Textarea, TextInput } from '@mantine/core';
+import {
+  Button,
+  Group,
+  Modal,
+  Paper,
+  Select,
+  Stack,
+  Text,
+  Textarea,
+  TextInput,
+  Title,
+} from '@mantine/core';
 import { useForm } from '@mantine/form';
+import { ShapePreview } from './ShapePreview';
 
 interface ShapeVariableModalProps {
   opened: boolean;
@@ -17,6 +29,7 @@ const shapeTypes = [
 ];
 
 const simpleShapes = [
+  { value: 'rounded', label: 'Rounded Square' },
   { value: 'circle', label: 'Circle' },
   { value: 'square', label: 'Square' },
   { value: 'triangle', label: 'Triangle' },
@@ -115,33 +128,49 @@ export function ShapeVariableModal({ opened, onClose, variable, onSave }: ShapeV
       opened={opened}
       onClose={onClose}
       title={<Text fw={600}>{variable ? 'Edit Shape Variable' : 'Add Shape Variable'}</Text>}
-      size="md"
+      size="lg"
     >
       <form onSubmit={form.onSubmit(handleSubmit)}>
         <Stack gap="md">
-          <TextInput
-            label="Name"
-            placeholder="e.g., Gold Coin Icon, Resource Symbol"
-            required
-            {...form.getInputProps('name')}
-          />
+          <Group grow align="flex-start">
+            <Stack gap="md" style={{ flex: 1 }}>
+              <TextInput
+                label="Name"
+                placeholder="e.g., Gold Coin Icon, Resource Symbol"
+                required
+                {...form.getInputProps('name')}
+              />
 
-          <Select
-            label="Type"
-            placeholder="Select shape type"
-            data={shapeTypes}
-            required
-            {...form.getInputProps('type')}
-          />
+              <Select
+                label="Type"
+                placeholder="Select shape type"
+                data={shapeTypes}
+                required
+                {...form.getInputProps('type')}
+              />
 
-          {getValueInput()}
+              {getValueInput()}
 
-          <Textarea
-            label="Description"
-            placeholder="Optional description of when to use this shape"
-            rows={3}
-            {...form.getInputProps('description')}
-          />
+              <Textarea
+                label="Description"
+                placeholder="Optional description of when to use this shape"
+                rows={3}
+                {...form.getInputProps('description')}
+              />
+            </Stack>
+
+            <Paper p="md" withBorder>
+              <Title order={6} mb="sm">
+                Preview
+              </Title>
+              <ShapePreview
+                type={form.values.type}
+                value={form.values.value}
+                width={200}
+                height={150}
+              />
+            </Paper>
+          </Group>
 
           <Group justify="flex-end" mt="md">
             <Button variant="subtle" onClick={onClose} disabled={loading}>
