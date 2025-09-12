@@ -14,6 +14,7 @@ import {
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { ShapePreview } from './ShapePreview';
+import { SimpleShapeType } from '@/lib/fabricRenderer/simpleShapeTypes';
 
 interface ShapeVariableModalProps {
   opened: boolean;
@@ -28,14 +29,16 @@ const shapeTypes = [
   { value: 'simple-shape', label: 'Simple Shape' },
 ];
 
-const simpleShapes = [
-  { value: 'rounded', label: 'Rounded Square' },
+const simpleShapes: { value: SimpleShapeType; label: string }[] = [
   { value: 'circle', label: 'Circle' },
   { value: 'square', label: 'Square' },
   { value: 'triangle', label: 'Triangle' },
   { value: 'diamond', label: 'Diamond' },
   { value: 'star', label: 'Star' },
   { value: 'hexagon', label: 'Hexagon' },
+  { value: 'rounded', label: 'Rounded Square' },
+  { value: 'rectangle', label: 'Rectangle' },
+  { value: 'ellipse', label: 'Ellipse' },
 ];
 
 export function ShapeVariableModal({ opened, onClose, variable, onSave }: ShapeVariableModalProps) {

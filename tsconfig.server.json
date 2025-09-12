@@ -2,10 +2,11 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "module": "CommonJS",
+    "moduleResolution": "node",
+    "allowImportingTsExtensions": false,
+    "esModuleInterop": true,
     "outDir": "dist",
     "noEmit": false
   },
-  "include": [
-    "server"
-  ]
+  "include": ["server"]
 }

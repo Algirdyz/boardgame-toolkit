@@ -168,23 +168,21 @@ export function ComponentCanvas({
       </Group>
 
       {/* Choice selector */}
-      {component.choices.length > 1 && (
-        <Group gap="xs" style={{ flexShrink: 0 }}>
-          <Text size="sm" fw={500}>
-            Choice:
-          </Text>
-          {component.choices.map((choice, index) => (
-            <Button
-              key={choice.id}
-              size="xs"
-              variant={selectedChoiceIndex === index ? 'filled' : 'outline'}
-              onClick={() => handleChoiceChange(index)}
-            >
-              {choice.name}
-            </Button>
-          ))}
-        </Group>
-      )}
+      <Group gap="xs" style={{ flexShrink: 0 }}>
+        <Text size="sm" fw={500}>
+          Choice:
+        </Text>
+        {component.choices.map((choice, index) => (
+          <Button
+            key={choice.id}
+            size="xs"
+            variant={selectedChoiceIndex === index ? 'filled' : 'outline'}
+            onClick={() => handleChoiceChange(index)}
+          >
+            {choice.name}
+          </Button>
+        ))}
+      </Group>
 
       {/* Error display */}
       {renderError && (
