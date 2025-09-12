@@ -1,6 +1,6 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { notifications } from '@mantine/notifications';
 import { Variable, VariableType } from '@shared/variables';
+import { notifications } from '@mantine/notifications';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { deleteVariable, getVariables, saveVariable } from '../../api/variablesApi';
 
 export function useVariablesManager() {

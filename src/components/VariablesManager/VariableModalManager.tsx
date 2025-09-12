@@ -1,9 +1,9 @@
 import { VariableColor, VariableDimension, VariableName, VariableShape } from '@shared/variables';
-import { VariableModalManagerProps } from './types';
 import { ColorVariableModal } from './modals/ColorVariableModal';
 import { DimensionVariableModal } from './modals/DimensionVariableModal';
 import { NameVariableModal } from './modals/NameVariableModal';
 import { ShapeVariableModal } from './modals/ShapeVariableModal';
+import { VariableModalManagerProps } from './types';
 
 export function VariableModalManager({
   editingVariable,

@@ -38,8 +38,8 @@ export function VariableList({ type, variables, onAdd, onEdit, onDelete }: Varia
           </Text>
         </Paper>
       ) : (
-        <SimpleGrid 
-          cols={{ base: 2, sm: 3, md: 4, lg: 5, xl: 6 }} 
+        <SimpleGrid
+          cols={{ base: 2, sm: 3, md: 4, lg: 5, xl: 6 }}
           spacing="md"
           verticalSpacing="md"
         >

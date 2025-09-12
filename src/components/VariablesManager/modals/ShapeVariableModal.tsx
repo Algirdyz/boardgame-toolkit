@@ -167,8 +167,13 @@ export function ShapeVariableModal({ opened, onClose, variable, onSave }: ShapeV
                 Preview
               </Title>
               <ShapePreview
-                type={form.values.type}
-                value={form.values.value}
+                shape={{
+                  type: form.values.type,
+                  value: form.values.value,
+                  name: form.values.name || 'Preview',
+                  description: form.values.description,
+                  id: variable?.id,
+                }}
                 width={200}
                 height={150}
               />

@@ -1,7 +1,7 @@
 import { ActionIcon, Badge, Group, Paper, Stack, Text, Tooltip } from '@mantine/core';
 import { IconEdit, IconRuler, IconTag, IconTrash } from '@tabler/icons-react';
-import { VariableCardProps } from './types';
 import { ShapePreview } from './modals/ShapePreview';
+import { VariableCardProps } from './types';
 
 export function VariableCard({ variable, type, onEdit, onDelete }: VariableCardProps) {
   const renderCardContent = () => {
@@ -33,7 +33,7 @@ export function VariableCard({ variable, type, onEdit, onDelete }: VariableCardP
         return (
           <>
             <div style={{ width: 50, height: 50, flexShrink: 0 }}>
-              <ShapePreview type={shape.type} value={shape.value} width={50} height={50} />
+              <ShapePreview shape={shape} width={50} height={50} />
             </div>
             <Text size="sm" fw={500} ta="center" lineClamp={1}>
               {variable.name}
