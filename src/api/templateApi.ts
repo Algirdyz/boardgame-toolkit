@@ -43,3 +43,10 @@ export async function getTemplate(templateId: number): Promise<TemplateDefinitio
   const template = await response.json();
   return ensureTemplateDefaults(template);
 }
+
+export async function deleteTemplate(templateId: number): Promise<void> {
+  const response = await fetch(`/api/templates/${templateId}`, {
+    method: 'DELETE',
+  });
+  if (!response.ok) throw new Error('Network response was not ok');
+}
