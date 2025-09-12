@@ -1,16 +1,19 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { TemplateDefinition } from '@shared/templates';
-import { Box, Flex, Stack, Switch } from '@mantine/core';
+import { Box, Button, Flex, Stack, Switch } from '@mantine/core';
 import { useElementSize } from '@mantine/hooks';
+import { IconDeviceFloppy } from '@tabler/icons-react';
 import { useMutation } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
 import { getTemplate, saveTemplate } from '@/api/templateApi';
 import TemplateCanvas from '@/components/canvas/TemplateCanvas';
+import PendingComponent from '@/components/PendingComponent/PendingComponent';
 import ResourceEditor from '@/components/tileComponents/resourceCost/resourceEditor';
 import WorkerConfig from '@/components/tileComponents/workerSlots/WorkerConfig';
 
 export const Route = createFileRoute('/templates/$templateId')({
   component: RouteComponent,
+  pendingComponent: PendingComponent,
   loader: ({ params }) => {
     const templateId = parseInt(params.templateId, 10);
     return getTemplate(templateId);
@@ -20,13 +23,22 @@ export const Route = createFileRoute('/templates/$templateId')({
 function RouteComponent() {
   const { ref, width, height } = useElementSize();
   const [editLocked, setEditLocked] = useState(true);
+  const loadedTemplate = Route.useLoaderData();
 
-  const [template, setTemplate] = useState<TemplateDefinition>(Route.useLoaderData());
-  const save = useMutation({ mutationFn: saveTemplate });
+  const [template, setTemplate] = useState<TemplateDefinition>(loadedTemplate);
+  useEffect(() => {
+    console.log('Loaded template:', loadedTemplate.workerDefinition?.maxCount);
+    setTemplate(loadedTemplate);
+  }, [loadedTemplate]);
 
-  const onTemplateChange = async (updatedTemplate: TemplateDefinition) => {
+  const save = useMutation({
+    mutationFn: saveTemplate,
+  });
+
+  const onTemplateChange = (updatedTemplate: TemplateDefinition) => {
+    // This is the source of truth for the editor's current state.
     setTemplate(updatedTemplate);
-    await save.mutateAsync(updatedTemplate);
+    save.mutate(updatedTemplate);
   };
 
   return (
@@ -41,6 +53,16 @@ function RouteComponent() {
         }}
       >
         <Stack>
+          <Button
+            loading={save.isPending}
+            leftSection={<IconDeviceFloppy />}
+            onClick={() => {
+              save.mutate(template);
+            }}
+            disabled={save.isPending}
+          >
+            Save
+          </Button>
           <Switch
             label="Edit Shape"
             checked={!editLocked}
