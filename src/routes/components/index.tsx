@@ -1,23 +1,11 @@
 import { useState } from 'react';
 import { ComponentStaticSpecs } from '@shared/components';
-import {
-  Button,
-  Center,
-  Container,
-  Group,
-  Loader,
-  Modal,
-  Stack,
-  Text,
-  TextInput,
-  Title,
-} from '@mantine/core';
+import { Center, Loader } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { IconPlus } from '@tabler/icons-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { deleteComponent, getComponents, saveComponent } from '@/api/componentApi';
-import NavigationGrid, { NavigationCard } from '@/components/NavigationGrid/NavigationGrid';
+import { OverviewPageTemplate, type NavigationCard } from '@/components';
 
 export const Route = createFileRoute('/components/')({
   component: Components,
@@ -49,6 +37,29 @@ function Components() {
     },
   });
 
+  const handleCreateComponent = async () => {
+    if (!name.trim()) return;
+
+    const defaultComponent: ComponentStaticSpecs = {
+      name,
+      description: '',
+      shapeId: 1, // Default to first shape
+      choices: [
+        {
+          id: 1,
+          name: 'Default',
+          description: '',
+          fillColorId: 1,
+          strokeColorId: 1,
+        },
+      ],
+    };
+    const savedComponent = await save.mutateAsync(defaultComponent);
+    close();
+    setName('');
+    navigate({ to: `/components/${savedComponent.id}` });
+  };
+
   if (components.isLoading)
     return (
       <Center>
@@ -67,58 +78,21 @@ function Components() {
     : [];
 
   return (
-    <Container size="lg" py="xl">
-      <Stack gap="xl">
-        <Modal opened={opened} onClose={close} title="New Component">
-          <TextInput
-            label="Component Name"
-            placeholder="Enter component name (e.g., Worker Slot, Resource Icon)"
-            mb="md"
-            value={name}
-            onChange={(e) => setName(e.currentTarget.value)}
-          />
-          <Button
-            onClick={async () => {
-              const defaultComponent: ComponentStaticSpecs = {
-                name,
-                description: '',
-                shapeId: 1, // Default to first shape
-                choices: [
-                  {
-                    id: 1,
-                    name: 'Default',
-                    description: '',
-                    fillColorId: 1,
-                    strokeColorId: 1,
-                  },
-                ],
-              };
-              const savedComponent = await save.mutateAsync(defaultComponent);
-              close();
-              setName('');
-              navigate({ to: `/components/${savedComponent.id}` });
-            }}
-            disabled={!name.trim()}
-          >
-            Create
-          </Button>
-        </Modal>
-
-        <Group justify="space-between" align="center">
-          <div>
-            <Title order={1}>Components</Title>
-            <Text c="dimmed" mt="xs">
-              Define reusable variables for colors, shapes, dimensions, and names that can be used
-              throughout your project.
-            </Text>
-          </div>
-
-          <Button onClick={open} leftSection={<IconPlus />}>
-            Create New Component
-          </Button>
-        </Group>
-        <NavigationGrid cards={cards} columns={3} />
-      </Stack>
-    </Container>
+    <OverviewPageTemplate
+      title="Components"
+      description="Define reusable variables for colors, shapes, dimensions, and names that can be used throughout your project."
+      cards={cards}
+      columns={3}
+      modalTitle="New Component"
+      modalPlaceholder="Enter component name (e.g., Worker Slot, Resource Icon)"
+      createButtonText="Create New Component"
+      opened={opened}
+      onClose={close}
+      onOpen={open}
+      name={name}
+      onNameChange={setName}
+      onSubmit={handleCreateComponent}
+      isLoading={save.isPending}
+    />
   );
 }
