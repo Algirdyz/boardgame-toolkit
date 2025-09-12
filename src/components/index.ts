@@ -4,3 +4,6 @@ export { default as NavigationGrid } from './NavigationGrid/NavigationGrid';
 export type { NavigationCard } from './NavigationGrid/NavigationGrid';
 export { GlobalNavbar } from './GlobalNavbar';
 export { SharedAppShell } from './SharedAppShell';
+
+// Template Editor Components
+export { TemplateBasicInfo, TemplateComponentsManager } from './TemplateEditor';
