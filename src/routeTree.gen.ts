@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TemplatesIndexRouteImport } from './routes/templates/index'
+import { Route as GlobalsIndexRouteImport } from './routes/globals/index'
 import { Route as TemplatesTemplateIdRouteImport } from './routes/templates/$templateId'
 
 const AboutRoute = AboutRouteImport.update({
@@ -29,6 +30,11 @@ const TemplatesIndexRoute = TemplatesIndexRouteImport.update({
   path: '/templates/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GlobalsIndexRoute = GlobalsIndexRouteImport.update({
+  id: '/globals/',
+  path: '/globals/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TemplatesTemplateIdRoute = TemplatesTemplateIdRouteImport.update({
   id: '/templates/$templateId',
   path: '/templates/$templateId',
@@ -39,12 +45,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
+  '/globals': typeof GlobalsIndexRoute
   '/templates': typeof TemplatesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
+  '/globals': typeof GlobalsIndexRoute
   '/templates': typeof TemplatesIndexRoute
 }
 export interface FileRoutesById {
@@ -52,20 +60,33 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
+  '/globals/': typeof GlobalsIndexRoute
   '/templates/': typeof TemplatesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/about' | '/templates/$templateId' | '/templates'
+  fullPaths:
+    | '/'
+    | '/about'
+    | '/templates/$templateId'
+    | '/globals'
+    | '/templates'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about' | '/templates/$templateId' | '/templates'
-  id: '__root__' | '/' | '/about' | '/templates/$templateId' | '/templates/'
+  to: '/' | '/about' | '/templates/$templateId' | '/globals' | '/templates'
+  id:
+    | '__root__'
+    | '/'
+    | '/about'
+    | '/templates/$templateId'
+    | '/globals/'
+    | '/templates/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
   TemplatesTemplateIdRoute: typeof TemplatesTemplateIdRoute
+  GlobalsIndexRoute: typeof GlobalsIndexRoute
   TemplatesIndexRoute: typeof TemplatesIndexRoute
 }
 
@@ -92,6 +113,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TemplatesIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/globals/': {
+      id: '/globals/'
+      path: '/globals'
+      fullPath: '/globals'
+      preLoaderRoute: typeof GlobalsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/templates/$templateId': {
       id: '/templates/$templateId'
       path: '/templates/$templateId'
@@ -106,6 +134,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   TemplatesTemplateIdRoute: TemplatesTemplateIdRoute,
+  GlobalsIndexRoute: GlobalsIndexRoute,
   TemplatesIndexRoute: TemplatesIndexRoute,
 }
 export const routeTree = rootRouteImport

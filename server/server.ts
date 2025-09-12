@@ -1,4 +1,5 @@
 import Fastify from 'fastify';
+import globalRoutes from './routes/globalRoutes';
 import templateRoutes from './routes/templateRoutes';
 
 const fastify = Fastify({
@@ -6,7 +7,7 @@ const fastify = Fastify({
 });
 
 fastify.register(templateRoutes);
-
+fastify.register(globalRoutes);
 
 const start = async () => {
   try {
@@ -17,4 +18,3 @@ const start = async () => {
   }
 };
 start();
-

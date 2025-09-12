@@ -1,6 +1,7 @@
+import path from 'path';
+import { GlobalVariable, GlobalVariables, GlobalVariableType } from '@shared/globals';
 import { TemplateDefinition } from '@shared/templates';
 import Database from 'better-sqlite3';
-import path from 'path';
 
 const db = new Database(path.join(process.cwd(), 'server/data/boardgame-toolkit.db'));
 
@@ -11,6 +12,18 @@ db.exec(`
   )
 `);
 
+db.exec(`
+  CREATE TABLE IF NOT EXISTS global_variables (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    type TEXT NOT NULL,
+    name TEXT NOT NULL,
+    value TEXT NOT NULL,
+    unit TEXT,
+    description TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  )
+`);
 
 export function getTemplates(): TemplateDefinition[] {
   const stmt = db.prepare('SELECT * FROM templates');
@@ -33,7 +46,9 @@ export function getTemplate(templateId: number) {
 }
 
 export function saveTemplate(templateId: number, definition: any) {
-  const stmt = db.prepare('INSERT OR REPLACE INTO templates (templateId, definition) VALUES (?, ?)');
+  const stmt = db.prepare(
+    'INSERT OR REPLACE INTO templates (templateId, definition) VALUES (?, ?)'
+  );
   stmt.run(templateId, JSON.stringify(definition));
 }
 
@@ -48,3 +63,112 @@ export function deleteTemplate(templateId: number) {
   stmt.run(templateId);
 }
 
+// Global Variables Functions
+export function getGlobalVariables(): GlobalVariables {
+  const stmt = db.prepare('SELECT * FROM global_variables');
+  const rows = stmt.all() as any[];
+
+  const result: GlobalVariables = {
+    colors: [],
+    shapes: [],
+    dimensions: [],
+    names: [],
+  };
+
+  rows.forEach((row) => {
+    const baseItem = {
+      id: row.id,
+      name: row.name,
+      description: row.description,
+    };
+
+    switch (row.type) {
+      case 'colors':
+        result.colors.push({
+          ...baseItem,
+          value: row.value,
+        });
+        break;
+      case 'shapes':
+        result.shapes.push({
+          ...baseItem,
+          type: JSON.parse(row.value).type,
+          value: JSON.parse(row.value).value,
+        });
+        break;
+      case 'dimensions':
+        result.dimensions.push({
+          ...baseItem,
+          value: parseFloat(row.value),
+          unit: row.unit,
+        });
+        break;
+      case 'names':
+        result.names.push({
+          ...baseItem,
+          value: row.value,
+        });
+        break;
+    }
+  });
+
+  return result;
+}
+
+export function saveGlobalVariable(type: GlobalVariableType, variable: GlobalVariable): number {
+  const baseData = {
+    name: variable.name,
+    description: variable.description || null,
+  };
+
+  let value: string;
+  let unit: string | null = null;
+
+  switch (type) {
+    case 'colors': {
+      value = (variable as any).value;
+      break;
+    }
+    case 'shapes': {
+      const shape = variable as any;
+      value = JSON.stringify({ type: shape.type, value: shape.value });
+      break;
+    }
+    case 'dimensions': {
+      const dim = variable as any;
+      value = dim.value.toString();
+      unit = dim.unit;
+      break;
+    }
+    case 'names': {
+      value = (variable as any).value;
+      break;
+    }
+    default:
+      throw new Error(`Unknown variable type: ${type}`);
+  }
+
+  if (variable.id) {
+    // Update existing
+    const stmt = db.prepare(`
+      UPDATE global_variables 
+      SET name = ?, value = ?, unit = ?, description = ?, updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `);
+    stmt.run(baseData.name, value, unit, baseData.description, variable.id);
+    return variable.id;
+  }
+
+  // Create new
+  const stmt = db.prepare(`
+    INSERT INTO global_variables (type, name, value, unit, description)
+    VALUES (?, ?, ?, ?, ?)
+  `);
+  const info = stmt.run(type, baseData.name, value, unit, baseData.description);
+  return info.lastInsertRowid as number;
+}
+
+export function deleteGlobalVariable(id: number) {
+  const stmt = db.prepare('DELETE FROM global_variables WHERE id = ?');
+  stmt.run(id);
+}
