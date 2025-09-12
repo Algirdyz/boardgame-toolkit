@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
 import { TemplateDefinition } from '@shared/templates';
-import { Box, Button, Flex, Stack, Switch } from '@mantine/core';
-import { useElementSize } from '@mantine/hooks';
-import { IconDeviceFloppy } from '@tabler/icons-react';
+import { TextInput } from '@mantine/core';
 import { useMutation } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
 import { getTemplate, saveTemplate } from '@/api/templateApi';
+import { EditorPageTemplate } from '@/components';
 import TemplateCanvas from '@/components/canvas/TemplateCanvas';
 import PendingComponent from '@/components/PendingComponent/PendingComponent';
 import ResourceEditor from '@/components/tileComponents/resourceCost/resourceEditor';
@@ -21,7 +20,6 @@ export const Route = createFileRoute('/templates/$templateId')({
 });
 
 function RouteComponent() {
-  const { ref, width, height } = useElementSize();
   const [editLocked, setEditLocked] = useState(true);
   const loadedTemplate = Route.useLoaderData();
 
@@ -41,47 +39,48 @@ function RouteComponent() {
     save.mutate(updatedTemplate);
   };
 
+  const templateSections = [
+    {
+      title: 'Basic Information',
+      content: (
+        <TextInput
+          label="Template Name"
+          value={template.name}
+          onChange={(e) =>
+            onTemplateChange({
+              ...template,
+              name: e.target.value,
+            })
+          }
+        />
+      ),
+    },
+    {
+      title: 'Worker Configuration',
+      content: (
+        <WorkerConfig
+          definition={template.workerDefinition}
+          onChange={(workerDefinition) => onTemplateChange({ ...template, workerDefinition })}
+        />
+      ),
+    },
+    {
+      title: 'Resource Configuration',
+      content: (
+        <ResourceEditor
+          definition={template.resourceListDefinition}
+          onChange={(resourceListDefinition) =>
+            onTemplateChange({ ...template, resourceListDefinition })
+          }
+        />
+      ),
+    },
+  ];
+
   return (
-    <Flex style={{ width: '100%', height: '100%', position: 'relative' }}>
-      <Box
-        style={{
-          width: '300px',
-          height: '100%',
-          flexShrink: 0,
-          borderRight: '1px solid #eee',
-          padding: '16px',
-        }}
-      >
-        <Stack>
-          <Button
-            loading={save.isPending}
-            leftSection={<IconDeviceFloppy />}
-            onClick={() => {
-              save.mutate(template);
-            }}
-            disabled={save.isPending}
-          >
-            Save
-          </Button>
-          <Switch
-            label="Edit Shape"
-            checked={!editLocked}
-            onChange={(event) => setEditLocked(!event.currentTarget.checked)}
-          />
-          <WorkerConfig
-            definition={template.workerDefinition}
-            onChange={(workerDefinition) => onTemplateChange({ ...template, workerDefinition })}
-          />
-          <ResourceEditor
-            definition={template.resourceListDefinition}
-            onChange={(resourceListDefinition) =>
-              onTemplateChange({ ...template, resourceListDefinition })
-            }
-          />
-        </Stack>
-        <div>Template Name: {template.name}</div>
-      </Box>
-      <Box ref={ref} style={{ flex: 1, height: '100%', overflow: 'hidden' }}>
+    <EditorPageTemplate
+      title="Template Editor"
+      canvasElement={(width, height) => (
         <TemplateCanvas
           template={template}
           onTemplateChange={onTemplateChange}
@@ -89,7 +88,13 @@ function RouteComponent() {
           height={height}
           editLocked={editLocked}
         />
-      </Box>
-    </Flex>
+      )}
+      onSave={() => save.mutate(template)}
+      isSaving={save.isPending}
+      editLocked={!editLocked}
+      onEditLockChange={(locked) => setEditLocked(!locked)}
+      editLockLabel="Edit Shape"
+      sections={templateSections}
+    />
   );
 }
