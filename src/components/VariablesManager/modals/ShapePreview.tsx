@@ -164,7 +164,8 @@ function addSimpleShape(
     case 'circle': {
       fabricObject = new fabric.Circle({
         radius: size / 2,
-        fill: '#4263eb',
+        stroke: '#4263eb',
+        fill: '#f8f9fa',
         left: centerX,
         top: centerY,
         originX: 'center',
@@ -179,7 +180,8 @@ function addSimpleShape(
       fabricObject = new fabric.Rect({
         width: size,
         height: size,
-        fill: '#4263eb',
+        stroke: '#4263eb',
+        fill: '#f8f9fa',
         left: centerX,
         top: centerY,
         originX: 'center',
@@ -194,7 +196,8 @@ function addSimpleShape(
       fabricObject = new fabric.Rect({
         width: size,
         height: size,
-        fill: '#4263eb',
+        stroke: '#4263eb',
+        fill: '#f8f9fa',
         rx: size * 0.1,
         ry: size * 0.1,
         left: centerX,
@@ -211,7 +214,8 @@ function addSimpleShape(
       fabricObject = new fabric.Triangle({
         width: size,
         height: size,
-        fill: '#4263eb',
+        stroke: '#4263eb',
+        fill: '#f8f9fa',
         left: centerX,
         top: centerY,
         originX: 'center',
@@ -226,7 +230,8 @@ function addSimpleShape(
       fabricObject = new fabric.Rect({
         width: size * 0.7,
         height: size * 0.7,
-        fill: '#4263eb',
+        stroke: '#4263eb',
+        fill: '#f8f9fa',
         left: centerX,
         top: centerY,
         originX: 'center',
@@ -253,7 +258,8 @@ function addSimpleShape(
       }
 
       fabricObject = new fabric.Polygon(points, {
-        fill: '#4263eb',
+        stroke: '#4263eb',
+        fill: '#f8f9fa',
         selectable: false,
         evented: false,
       });
@@ -273,7 +279,8 @@ function addSimpleShape(
       }
 
       fabricObject = new fabric.Polygon(points, {
-        fill: '#4263eb',
+        stroke: '#4263eb',
+        fill: '#f8f9fa',
         selectable: false,
         evented: false,
       });
