@@ -10,10 +10,9 @@ export interface ChoiceOption {
   name: string;
   description?: string;
 
-  fillColorId: number;
-  strokeColorId: number;
+  fillColorId?: number;
+  strokeColorId?: number;
 
-  centerComponent?: number; // ID of another component to center within this one
   innerComponent?: {
     id: number; // ID of another component to place inside this one
     position: CanvasPosition;

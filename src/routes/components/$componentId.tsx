@@ -14,12 +14,12 @@ import {
   TextInput,
   Title,
 } from '@mantine/core';
-import { useElementSize } from '@mantine/hooks';
 import { IconDeviceFloppy, IconPlus, IconTrash } from '@tabler/icons-react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
-import { getComponent, saveComponent } from '@/api/componentApi';
+import { getComponent, getComponents, saveComponent } from '@/api/componentApi';
 import { getGlobalVariables } from '@/api/globalApi';
+import { ComponentCanvas } from '@/components/canvas/ComponentCanvas';
 import PendingComponent from '@/components/PendingComponent/PendingComponent';
 
 export const Route = createFileRoute('/components/$componentId')({
@@ -32,7 +32,6 @@ export const Route = createFileRoute('/components/$componentId')({
 });
 
 function RouteComponent() {
-  const { ref, width, height } = useElementSize();
   const [editLocked, setEditLocked] = useState(true);
   const loadedComponent = Route.useLoaderData();
 
@@ -41,6 +40,11 @@ function RouteComponent() {
   const globalVars = useQuery({
     queryKey: ['globalVariables'],
     queryFn: getGlobalVariables,
+  });
+
+  const allComponents = useQuery({
+    queryKey: ['components'],
+    queryFn: getComponents,
   });
 
   useEffect(() => {
@@ -61,8 +65,7 @@ function RouteComponent() {
       id: Math.max(0, ...component.choices.map((c) => c.id)) + 1,
       name: `Choice ${component.choices.length + 1}`,
       description: '',
-      fillColorId: 1,
-      strokeColorId: 1,
+      // Colors are now optional
     };
 
     onComponentChange({
@@ -88,12 +91,14 @@ function RouteComponent() {
   };
 
   // Color and shape options for dropdowns
-  const colorOptions =
-    globalVars.data?.colors.map((color) => ({
+  const colorOptions = [
+    { value: '', label: 'No Color', color: 'transparent' },
+    ...(globalVars.data?.colors.map((color) => ({
       value: color.id!.toString(),
       label: color.name,
       color: color.value,
-    })) || [];
+    })) || []),
+  ];
 
   const shapeOptions =
     globalVars.data?.shapes.map((shape) => ({
@@ -108,15 +113,17 @@ function RouteComponent() {
         style={{
           width: 16,
           height: 16,
-          backgroundColor: option.color,
-          border: '1px solid #ccc',
+          backgroundColor: option.color === 'transparent' ? '#f8f9fa' : option.color,
+          border: option.color === 'transparent' ? '2px dashed #ccc' : '1px solid #ccc',
           borderRadius: 3,
         }}
       />
       <Text size="sm">{option.label}</Text>
-      <Text size="xs" c="dimmed">
-        ({option.color})
-      </Text>
+      {option.color !== 'transparent' && (
+        <Text size="xs" c="dimmed">
+          ({option.color})
+        </Text>
+      )}
     </Group>
   );
 
@@ -225,29 +232,39 @@ function RouteComponent() {
 
                     <Select
                       label="Fill Color"
-                      value={choice.fillColorId.toString()}
+                      placeholder="No color selected"
+                      value={choice.fillColorId?.toString() || ''}
                       data={colorOptions}
                       renderOption={renderColorSelectOption}
-                      onChange={(value) =>
-                        value &&
-                        updateChoice(choice.id, {
-                          fillColorId: parseInt(value, 10),
-                        })
-                      }
+                      clearable
+                      onChange={(value) => {
+                        if (value === '' || value === null) {
+                          updateChoice(choice.id, { fillColorId: undefined });
+                        } else {
+                          updateChoice(choice.id, {
+                            fillColorId: parseInt(value, 10),
+                          });
+                        }
+                      }}
                       size="sm"
                     />
 
                     <Select
                       label="Stroke Color"
-                      value={choice.strokeColorId.toString()}
+                      placeholder="No color selected"
+                      value={choice.strokeColorId?.toString() || ''}
                       data={colorOptions}
                       renderOption={renderColorSelectOption}
-                      onChange={(value) =>
-                        value &&
-                        updateChoice(choice.id, {
-                          strokeColorId: parseInt(value, 10),
-                        })
-                      }
+                      clearable
+                      onChange={(value) => {
+                        if (value === '' || value === null) {
+                          updateChoice(choice.id, { strokeColorId: undefined });
+                        } else {
+                          updateChoice(choice.id, {
+                            strokeColorId: parseInt(value, 10),
+                          });
+                        }
+                      }}
                       size="sm"
                     />
                   </Stack>
@@ -266,19 +283,23 @@ function RouteComponent() {
         </Stack>
       </Box>
 
-      <Box ref={ref} style={{ flex: 1, height: '100%' }}>
-        {/* Canvas will go here - for now just a placeholder */}
-        <Flex align="center" justify="center" h="100%" bg="#f8f9fa">
-          <Stack align="center" gap="md">
-            <Title order={2} c="dimmed">
-              Component Canvas
-            </Title>
-            <Text c="dimmed">Canvas preview will be implemented here</Text>
-            <Text size="sm" c="dimmed">
-              Dimensions: {width} x {height}
-            </Text>
-          </Stack>
-        </Flex>
+      <Box style={{ flex: 1, height: '100%' }}>
+        {globalVars.data ? (
+          <ComponentCanvas
+            component={component}
+            globalVariables={globalVars.data}
+            allComponents={allComponents.data || []}
+          />
+        ) : (
+          <Flex align="center" justify="center" h="100%" bg="#f8f9fa">
+            <Stack align="center" gap="md">
+              <Title order={2} c="dimmed">
+                Loading Canvas...
+              </Title>
+              <Text c="dimmed">Waiting for global variables</Text>
+            </Stack>
+          </Flex>
+        )}
       </Box>
     </Flex>
   );
