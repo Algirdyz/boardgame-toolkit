@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
-import { GlobalName } from '@shared/globals';
+import { VariableName } from '@shared/variables';
 import { Button, Group, Modal, Stack, Text, Textarea, TextInput } from '@mantine/core';
 import { useForm } from '@mantine/form';
 
 interface NameVariableModalProps {
   opened: boolean;
   onClose: () => void;
-  variable: GlobalName | null;
-  onSave: (variable: GlobalName) => void;
+  variable: VariableName | null;
+  onSave: (variable: VariableName) => void;
 }
 
 export function NameVariableModal({ opened, onClose, variable, onSave }: NameVariableModalProps) {
@@ -40,7 +40,7 @@ export function NameVariableModal({ opened, onClose, variable, onSave }: NameVar
   const handleSubmit = async (values: typeof form.values) => {
     try {
       setLoading(true);
-      const nameVariable: GlobalName = {
+      const nameVariable: VariableName = {
         ...(variable?.id && { id: variable.id }),
         name: values.name.trim(),
         value: values.value.trim(),

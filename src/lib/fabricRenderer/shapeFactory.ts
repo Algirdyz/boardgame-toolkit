@@ -1,4 +1,4 @@
-import { GlobalColor, GlobalShape } from '@shared/globals';
+import { VariableColor, VariableShape } from '@shared/variables';
 import * as fabric from 'fabric';
 import { isValidSimpleShape, SimpleShapeType } from './simpleShapeTypes';
 
@@ -6,9 +6,9 @@ import { isValidSimpleShape, SimpleShapeType } from './simpleShapeTypes';
  * Creates a Fabric.js object from a shape definition
  */
 export async function createFabricShape(
-  shape: GlobalShape,
-  fillColor?: GlobalColor,
-  strokeColor?: GlobalColor
+  shape: VariableShape,
+  fillColor?: VariableColor,
+  strokeColor?: VariableColor
 ): Promise<fabric.FabricObject | null> {
   const fill = fillColor?.value || 'transparent';
   const stroke = strokeColor?.value || '#000000';

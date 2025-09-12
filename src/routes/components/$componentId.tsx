@@ -18,7 +18,7 @@ import { IconDeviceFloppy, IconPlus, IconTrash } from '@tabler/icons-react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
 import { getComponent, getComponents, saveComponent } from '@/api/componentApi';
-import { getGlobalVariables } from '@/api/globalApi';
+import { getVariables } from '@/api/variablesApi';
 import { ComponentCanvas } from '@/components/canvas/ComponentCanvas';
 import PendingComponent from '@/components/PendingComponent/PendingComponent';
 
@@ -37,9 +37,9 @@ function RouteComponent() {
 
   const [component, setComponent] = useState<ComponentStaticSpecs>(loadedComponent);
 
-  const globalVars = useQuery({
-    queryKey: ['globalVariables'],
-    queryFn: getGlobalVariables,
+  const variables = useQuery({
+    queryKey: ['variables'],
+    queryFn: getVariables,
   });
 
   const allComponents = useQuery({
@@ -93,7 +93,7 @@ function RouteComponent() {
   // Color and shape options for dropdowns
   const colorOptions = [
     { value: '', label: 'No Color', color: 'transparent' },
-    ...(globalVars.data?.colors.map((color) => ({
+    ...(variables.data?.colors.map((color) => ({
       value: color.id!.toString(),
       label: color.name,
       color: color.value,
@@ -101,7 +101,7 @@ function RouteComponent() {
   ];
 
   const shapeOptions =
-    globalVars.data?.shapes.map((shape) => ({
+    variables.data?.shapes.map((shape) => ({
       value: shape.id!.toString(),
       label: `${shape.name} (${shape.type})`,
     })) || [];
@@ -284,10 +284,10 @@ function RouteComponent() {
       </Box>
 
       <Box style={{ flex: 1, height: '100%' }}>
-        {globalVars.data ? (
+        {variables.data ? (
           <ComponentCanvas
             component={component}
-            globalVariables={globalVars.data}
+            variables={variables.data}
             allComponents={allComponents.data || []}
           />
         ) : (
@@ -296,7 +296,7 @@ function RouteComponent() {
               <Title order={2} c="dimmed">
                 Loading Canvas...
               </Title>
-              <Text c="dimmed">Waiting for global variables</Text>
+              <Text c="dimmed">Waiting for variables</Text>
             </Stack>
           </Flex>
         )}

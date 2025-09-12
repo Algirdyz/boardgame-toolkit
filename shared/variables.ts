@@ -1,11 +1,11 @@
-export interface GlobalColor {
+export interface VariableColor {
   id?: number;
   name: string;
   value: string; // hex color value
   description?: string;
 }
 
-export interface GlobalShape {
+export interface VariableShape {
   id?: number;
   name: string;
   type: 'image' | 'svg' | 'simple-shape';
@@ -13,7 +13,7 @@ export interface GlobalShape {
   description?: string;
 }
 
-export interface GlobalDimension {
+export interface VariableDimension {
   id?: number;
   name: string;
   value: number; // value in pixels or mm depending on unit
@@ -21,20 +21,20 @@ export interface GlobalDimension {
   description?: string;
 }
 
-export interface GlobalName {
+export interface VariableName {
   id?: number;
   name: string;
   value: string;
   description?: string;
 }
 
-export interface GlobalVariables {
-  colors: GlobalColor[];
-  shapes: GlobalShape[];
-  dimensions: GlobalDimension[];
-  names: GlobalName[];
+export interface Variables {
+  colors: VariableColor[];
+  shapes: VariableShape[];
+  dimensions: VariableDimension[];
+  names: VariableName[];
 }
 
 // Type for individual variable operations
-export type GlobalVariableType = 'colors' | 'shapes' | 'dimensions' | 'names';
-export type GlobalVariable = GlobalColor | GlobalShape | GlobalDimension | GlobalName;
+export type VariableType = 'colors' | 'shapes' | 'dimensions' | 'names';
+export type Variable = VariableColor | VariableShape | VariableDimension | VariableName;

@@ -1,14 +1,14 @@
 import Fastify from 'fastify';
 import { componentRoutes } from './routes/componentRoutes';
-import globalRoutes from './routes/globalRoutes';
 import templateRoutes from './routes/templateRoutes';
+import variableRoutes from './routes/variableRoutes';
 
 const fastify = Fastify({
   logger: true,
 });
 
 fastify.register(templateRoutes);
-fastify.register(globalRoutes);
+fastify.register(variableRoutes);
 fastify.register(componentRoutes);
 
 const start = async () => {

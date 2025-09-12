@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { GlobalDimension } from '@shared/globals';
+import { VariableDimension } from '@shared/variables';
 import {
   Button,
   Group,
@@ -16,8 +16,8 @@ import { useForm } from '@mantine/form';
 interface DimensionVariableModalProps {
   opened: boolean;
   onClose: () => void;
-  variable: GlobalDimension | null;
-  onSave: (variable: GlobalDimension) => void;
+  variable: VariableDimension | null;
+  onSave: (variable: VariableDimension) => void;
 }
 
 const units = [
@@ -65,7 +65,7 @@ export function DimensionVariableModal({
   const handleSubmit = async (values: typeof form.values) => {
     try {
       setLoading(true);
-      const dimensionVariable: GlobalDimension = {
+      const dimensionVariable: VariableDimension = {
         ...(variable?.id && { id: variable.id }),
         name: values.name.trim(),
         value: values.value,

@@ -26,15 +26,15 @@ export async function renderComponent(
   }
 
   // Get the shape definition
-  const shape = context.globalVariables.shapes.find((s) => s.id === component.shapeId);
+  const shape = context.variables.shapes.find((s) => s.id === component.shapeId);
   if (!shape) {
     console.warn(`Shape with ID ${component.shapeId} not found for component ${component.name}`);
     return null;
   }
 
   // Get colors
-  const fillColor = context.globalVariables.colors.find((c) => c.id === choice.fillColorId);
-  const strokeColor = context.globalVariables.colors.find((c) => c.id === choice.strokeColorId);
+  const fillColor = context.variables.colors.find((c) => c.id === choice.fillColorId);
+  const strokeColor = context.variables.colors.find((c) => c.id === choice.strokeColorId);
 
   // Create the base shape
   const fabricObject = await createFabricShape(shape, fillColor, strokeColor);

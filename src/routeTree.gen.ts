@@ -11,8 +11,8 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as VariablesIndexRouteImport } from './routes/variables/index'
 import { Route as TemplatesIndexRouteImport } from './routes/templates/index'
-import { Route as GlobalsIndexRouteImport } from './routes/globals/index'
 import { Route as ComponentsIndexRouteImport } from './routes/components/index'
 import { Route as TemplatesTemplateIdRouteImport } from './routes/templates/$templateId'
 import { Route as ComponentsComponentIdRouteImport } from './routes/components/$componentId'
@@ -27,14 +27,14 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const VariablesIndexRoute = VariablesIndexRouteImport.update({
+  id: '/variables/',
+  path: '/variables/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TemplatesIndexRoute = TemplatesIndexRouteImport.update({
   id: '/templates/',
   path: '/templates/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const GlobalsIndexRoute = GlobalsIndexRouteImport.update({
-  id: '/globals/',
-  path: '/globals/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ComponentsIndexRoute = ComponentsIndexRouteImport.update({
@@ -59,8 +59,8 @@ export interface FileRoutesByFullPath {
   '/components/$componentId': typeof ComponentsComponentIdRoute
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
   '/components': typeof ComponentsIndexRoute
-  '/globals': typeof GlobalsIndexRoute
   '/templates': typeof TemplatesIndexRoute
+  '/variables': typeof VariablesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -68,8 +68,8 @@ export interface FileRoutesByTo {
   '/components/$componentId': typeof ComponentsComponentIdRoute
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
   '/components': typeof ComponentsIndexRoute
-  '/globals': typeof GlobalsIndexRoute
   '/templates': typeof TemplatesIndexRoute
+  '/variables': typeof VariablesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -78,8 +78,8 @@ export interface FileRoutesById {
   '/components/$componentId': typeof ComponentsComponentIdRoute
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
   '/components/': typeof ComponentsIndexRoute
-  '/globals/': typeof GlobalsIndexRoute
   '/templates/': typeof TemplatesIndexRoute
+  '/variables/': typeof VariablesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -89,8 +89,8 @@ export interface FileRouteTypes {
     | '/components/$componentId'
     | '/templates/$templateId'
     | '/components'
-    | '/globals'
     | '/templates'
+    | '/variables'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -98,8 +98,8 @@ export interface FileRouteTypes {
     | '/components/$componentId'
     | '/templates/$templateId'
     | '/components'
-    | '/globals'
     | '/templates'
+    | '/variables'
   id:
     | '__root__'
     | '/'
@@ -107,8 +107,8 @@ export interface FileRouteTypes {
     | '/components/$componentId'
     | '/templates/$templateId'
     | '/components/'
-    | '/globals/'
     | '/templates/'
+    | '/variables/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -117,8 +117,8 @@ export interface RootRouteChildren {
   ComponentsComponentIdRoute: typeof ComponentsComponentIdRoute
   TemplatesTemplateIdRoute: typeof TemplatesTemplateIdRoute
   ComponentsIndexRoute: typeof ComponentsIndexRoute
-  GlobalsIndexRoute: typeof GlobalsIndexRoute
   TemplatesIndexRoute: typeof TemplatesIndexRoute
+  VariablesIndexRoute: typeof VariablesIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -137,18 +137,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/variables/': {
+      id: '/variables/'
+      path: '/variables'
+      fullPath: '/variables'
+      preLoaderRoute: typeof VariablesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/templates/': {
       id: '/templates/'
       path: '/templates'
       fullPath: '/templates'
       preLoaderRoute: typeof TemplatesIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/globals/': {
-      id: '/globals/'
-      path: '/globals'
-      fullPath: '/globals'
-      preLoaderRoute: typeof GlobalsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/components/': {
@@ -181,8 +181,8 @@ const rootRouteChildren: RootRouteChildren = {
   ComponentsComponentIdRoute: ComponentsComponentIdRoute,
   TemplatesTemplateIdRoute: TemplatesTemplateIdRoute,
   ComponentsIndexRoute: ComponentsIndexRoute,
-  GlobalsIndexRoute: GlobalsIndexRoute,
   TemplatesIndexRoute: TemplatesIndexRoute,
+  VariablesIndexRoute: VariablesIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

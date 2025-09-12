@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { GlobalVariable, GlobalVariableType } from '@shared/globals';
+import { Variable, VariableType } from '@shared/variables';
 import {
   ActionIcon,
   Alert,
@@ -27,17 +27,17 @@ import {
   IconTrash,
 } from '@tabler/icons-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { deleteGlobalVariable, getGlobalVariables, saveGlobalVariable } from '../../api/globalApi';
+import { deleteVariable, getVariables, saveVariable } from '../../api/variablesApi';
 import { ColorVariableModal } from './modals/ColorVariableModal';
 import { DimensionVariableModal } from './modals/DimensionVariableModal';
 import { NameVariableModal } from './modals/NameVariableModal';
 import { ShapePreview } from './modals/ShapePreview';
 import { ShapeVariableModal } from './modals/ShapeVariableModal';
 
-export function GlobalVariablesManager() {
+export function VariablesManager() {
   const queryClient = useQueryClient();
-  const [editingVariable, setEditingVariable] = useState<GlobalVariable | null>(null);
-  const [editingType, setEditingType] = useState<GlobalVariableType | null>(null);
+  const [editingVariable, setEditingVariable] = useState<Variable | null>(null);
+  const [editingType, setEditingType] = useState<VariableType | null>(null);
   const [activeTab, setActiveTab] = useState<string>('colors');
 
   const [colorModalOpened, { open: openColorModal, close: closeColorModal }] = useDisclosure(false);
@@ -47,16 +47,16 @@ export function GlobalVariablesManager() {
   const [nameModalOpened, { open: openNameModal, close: closeNameModal }] = useDisclosure(false);
 
   // TanStack Query hooks
-  const globals = useQuery({
-    queryKey: ['globals'],
-    queryFn: getGlobalVariables,
+  const variables = useQuery({
+    queryKey: ['variables'],
+    queryFn: getVariables,
   });
 
   const saveMutation = useMutation({
-    mutationFn: ({ type, variable }: { type: GlobalVariableType; variable: GlobalVariable }) =>
-      saveGlobalVariable(type, variable),
+    mutationFn: ({ type, variable }: { type: VariableType; variable: Variable }) =>
+      saveVariable(type, variable),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['globals'] });
+      queryClient.invalidateQueries({ queryKey: ['variables'] });
       notifications.show({
         title: 'Success',
         message: `Variable ${editingVariable ? 'updated' : 'created'} successfully`,
@@ -74,9 +74,9 @@ export function GlobalVariablesManager() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: deleteGlobalVariable,
+    mutationFn: deleteVariable,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['globals'] });
+      queryClient.invalidateQueries({ queryKey: ['variables'] });
       notifications.show({
         title: 'Success',
         message: 'Variable deleted successfully',
@@ -92,7 +92,7 @@ export function GlobalVariablesManager() {
     },
   });
 
-  const handleAdd = (type: GlobalVariableType) => {
+  const handleAdd = (type: VariableType) => {
     setEditingVariable(null);
     setEditingType(type);
 
@@ -112,7 +112,7 @@ export function GlobalVariablesManager() {
     }
   };
 
-  const handleEdit = (type: GlobalVariableType, variable: GlobalVariable) => {
+  const handleEdit = (type: VariableType, variable: Variable) => {
     setEditingVariable(variable);
     setEditingType(type);
 
@@ -132,7 +132,7 @@ export function GlobalVariablesManager() {
     }
   };
 
-  const handleDelete = (_type: GlobalVariableType, id: number) => {
+  const handleDelete = (_type: VariableType, id: number) => {
     deleteMutation.mutate(id);
   };
 
@@ -145,11 +145,11 @@ export function GlobalVariablesManager() {
     closeNameModal();
   };
 
-  const handleSave = (type: GlobalVariableType, variable: GlobalVariable) => {
+  const handleSave = (type: VariableType, variable: Variable) => {
     saveMutation.mutate({ type, variable });
   };
 
-  const renderVariableList = (type: GlobalVariableType, variables: GlobalVariable[]) => {
+  const renderVariableList = (type: VariableType, variables: Variable[]) => {
     const getIcon = () => {
       switch (type) {
         case 'colors':
@@ -163,7 +163,7 @@ export function GlobalVariablesManager() {
       }
     };
 
-    const getDisplayValue = (variable: GlobalVariable) => {
+    const getDisplayValue = (variable: Variable) => {
       switch (type) {
         case 'colors': {
           return (
@@ -267,7 +267,7 @@ export function GlobalVariablesManager() {
     );
   };
 
-  if (globals.isLoading) {
+  if (variables.isLoading) {
     return (
       <Center>
         <Loader />
@@ -275,11 +275,11 @@ export function GlobalVariablesManager() {
     );
   }
 
-  if (globals.isError) {
+  if (variables.isError) {
     return (
       <Container size="lg" py="xl">
         <Alert color="red" title="Error">
-          Error loading global variables
+          Error loading variables
         </Alert>
       </Container>
     );
@@ -289,7 +289,7 @@ export function GlobalVariablesManager() {
     <Container size="lg" py="xl">
       <Stack gap="xl">
         <div>
-          <Title order={1}>Global Variables</Title>
+          <Title order={1}>Variables</Title>
           <Text c="dimmed" mt="xs">
             Define reusable variables for colors, shapes, dimensions, and names that can be used
             throughout your project.
@@ -313,19 +313,19 @@ export function GlobalVariablesManager() {
           </Tabs.List>
 
           <Tabs.Panel value="colors" pt="xl">
-            {renderVariableList('colors', globals.data?.colors || [])}
+            {renderVariableList('colors', variables.data?.colors || [])}
           </Tabs.Panel>
 
           <Tabs.Panel value="shapes" pt="xl">
-            {renderVariableList('shapes', globals.data?.shapes || [])}
+            {renderVariableList('shapes', variables.data?.shapes || [])}
           </Tabs.Panel>
 
           <Tabs.Panel value="dimensions" pt="xl">
-            {renderVariableList('dimensions', globals.data?.dimensions || [])}
+            {renderVariableList('dimensions', variables.data?.dimensions || [])}
           </Tabs.Panel>
 
           <Tabs.Panel value="names" pt="xl">
-            {renderVariableList('names', globals.data?.names || [])}
+            {renderVariableList('names', variables.data?.names || [])}
           </Tabs.Panel>
         </Tabs>
       </Stack>

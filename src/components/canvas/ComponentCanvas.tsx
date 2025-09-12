@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ComponentStaticSpecs } from '@shared/components';
-import { GlobalVariables } from '@shared/globals';
+import { Variables } from '@shared/variables';
 import { ActionIcon, Badge, Box, Button, Group, Stack, Text } from '@mantine/core';
 import { useElementSize } from '@mantine/hooks';
 import { IconEye, IconEyeOff, IconRefresh } from '@tabler/icons-react';
@@ -14,13 +14,13 @@ import {
 
 interface ComponentCanvasProps {
   component: ComponentStaticSpecs;
-  globalVariables: GlobalVariables;
+  variables: Variables;
   allComponents?: ComponentStaticSpecs[]; // For nested component rendering
 }
 
 export function ComponentCanvas({
   component,
-  globalVariables,
+  variables,
   allComponents = [],
 }: ComponentCanvasProps) {
   const canvasRef = useRef<fabric.Canvas | null>(null);
@@ -63,11 +63,11 @@ export function ComponentCanvas({
 
     return {
       canvas: canvasRef.current,
-      globalVariables,
+      variables,
       components: [component, ...allComponents],
       scale: 1,
     };
-  }, [globalVariables, component, allComponents]);
+  }, [variables, component, allComponents]);
 
   // Render component on canvas
   const renderComponent = useCallback(async () => {

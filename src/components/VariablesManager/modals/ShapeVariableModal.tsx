@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { GlobalShape } from '@shared/globals';
+import { VariableShape } from '@shared/variables';
 import {
   Button,
   Group,
@@ -19,8 +19,8 @@ import { SimpleShapeType } from '@/lib/fabricRenderer/simpleShapeTypes';
 interface ShapeVariableModalProps {
   opened: boolean;
   onClose: () => void;
-  variable: GlobalShape | null;
-  onSave: (variable: GlobalShape) => void;
+  variable: VariableShape | null;
+  onSave: (variable: VariableShape) => void;
 }
 
 const shapeTypes = [
@@ -74,7 +74,7 @@ export function ShapeVariableModal({ opened, onClose, variable, onSave }: ShapeV
   const handleSubmit = async (values: typeof form.values) => {
     try {
       setLoading(true);
-      const shapeVariable: GlobalShape = {
+      const shapeVariable: VariableShape = {
         ...(variable?.id && { id: variable.id }),
         name: values.name.trim(),
         type: values.type,

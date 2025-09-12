@@ -1,10 +1,10 @@
 import { CanvasPosition, ComponentStaticSpecs } from '@shared/components';
-import { GlobalVariables } from '@shared/globals';
+import { Variables } from '@shared/variables';
 import * as fabric from 'fabric';
 
 export interface RenderContext {
   canvas: fabric.Canvas;
-  globalVariables: GlobalVariables;
+  variables: Variables;
   components: ComponentStaticSpecs[];
   scale?: number; // Default scale for rendering
 }

@@ -4,7 +4,7 @@ import { Box, Button, Group, Stack, Text } from '@mantine/core';
 import { useQuery } from '@tanstack/react-query';
 import * as fabric from 'fabric';
 import { getComponents } from '@/api/componentApi';
-import { getGlobalVariables } from '@/api/globalApi';
+import { getVariables } from '@/api/variablesApi';
 import { addComponentToCanvas, clearCanvas, RenderContext } from '@/lib/fabricRenderer';
 
 interface ComponentCanvasPreviewProps {
@@ -18,10 +18,10 @@ export function ComponentCanvasPreview({ width = 400, height = 300 }: ComponentC
   const [selectedComponentId, setSelectedComponentId] = useState<number | null>(null);
   const [selectedChoiceIndex, setSelectedChoiceIndex] = useState(0);
 
-  // Fetch global variables and components
-  const { data: globalVariables } = useQuery({
-    queryKey: ['globalVariables'],
-    queryFn: getGlobalVariables,
+  // Fetch variable definitions and components
+  const { data: variables } = useQuery({
+    queryKey: ['variables'],
+    queryFn: getVariables,
   });
 
   const { data: components } = useQuery({
@@ -50,15 +50,15 @@ export function ComponentCanvasPreview({ width = 400, height = 300 }: ComponentC
 
   // Create render context
   const renderContext: RenderContext | null = React.useMemo(() => {
-    if (!canvasRef.current || !globalVariables || !components) return null;
+    if (!canvasRef.current || !variables || !components) return null;
 
     return {
       canvas: canvasRef.current,
-      globalVariables,
+      variables,
       components,
       scale: 1,
     };
-  }, [globalVariables, components]);
+  }, [variables, components]);
 
   const handleRenderComponent = async () => {
     if (!renderContext || !selectedComponentId) return;

@@ -24,15 +24,15 @@ export function GlobalNavbar() {
       <NavLink
         w="fit-content"
         component={Link}
-        to="/templates"
-        label="Templates"
+        to="/tile"
+        label="Tiles"
         leftSection={<IconTemplate size="1rem" stroke={1.5} />}
       />
       <NavLink
         w="fit-content"
         component={Link}
-        to="/tile"
-        label="Tiles"
+        to="/templates"
+        label="Templates"
         leftSection={<IconTemplate size="1rem" stroke={1.5} />}
       />
       <NavLink
@@ -42,12 +42,11 @@ export function GlobalNavbar() {
         label="Components"
         leftSection={<IconComponents size="1rem" stroke={1.5} />}
       />
-
       <NavLink
         w="fit-content"
         component={Link}
-        to="/globals"
-        label="Globals"
+        to="/variables"
+        label="Variables"
         leftSection={<IconGlobe size="1rem" stroke={1.5} />}
       />
       <NavLink

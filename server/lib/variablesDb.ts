@@ -1,11 +1,11 @@
-import { GlobalVariable, GlobalVariables, GlobalVariableType } from '@shared/globals';
+import { Variable, Variables, VariableType } from '@shared/variables';
 import { db } from './database';
 
-export function getGlobalVariables(): GlobalVariables {
+export function getDbVariables(): Variables {
   const stmt = db.prepare('SELECT * FROM global_variables');
   const rows = stmt.all() as any[];
 
-  const result: GlobalVariables = {
+  const result: Variables = {
     colors: [],
     shapes: [],
     dimensions: [],
@@ -52,7 +52,7 @@ export function getGlobalVariables(): GlobalVariables {
   return result;
 }
 
-export function saveGlobalVariable(type: GlobalVariableType, variable: GlobalVariable): number {
+export function saveDbVariable(type: VariableType, variable: Variable): number {
   const baseData = {
     name: variable.name,
     description: variable.description,
@@ -102,7 +102,7 @@ export function saveGlobalVariable(type: GlobalVariableType, variable: GlobalVar
   return info.lastInsertRowid as number;
 }
 
-export function deleteGlobalVariable(id: number) {
+export function deleteDbVariable(id: number) {
   const stmt = db.prepare('DELETE FROM global_variables WHERE id = ?');
   stmt.run(id);
 }

@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
-import { GlobalColor } from '@shared/globals';
+import { VariableColor } from '@shared/variables';
 import { Button, ColorInput, Group, Modal, Stack, Text, Textarea, TextInput } from '@mantine/core';
 import { useForm } from '@mantine/form';
 
 interface ColorVariableModalProps {
   opened: boolean;
   onClose: () => void;
-  variable: GlobalColor | null;
-  onSave: (variable: GlobalColor) => void;
+  variable: VariableColor | null;
+  onSave: (variable: VariableColor) => void;
 }
 
 export function ColorVariableModal({ opened, onClose, variable, onSave }: ColorVariableModalProps) {
@@ -43,7 +43,7 @@ export function ColorVariableModal({ opened, onClose, variable, onSave }: ColorV
   const handleSubmit = async (values: typeof form.values) => {
     try {
       setLoading(true);
-      const colorVariable: GlobalColor = {
+      const colorVariable: VariableColor = {
         ...(variable?.id && { id: variable.id }),
         name: values.name.trim(),
         value: values.value,
