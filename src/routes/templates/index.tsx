@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { TemplateDefinition } from '@shared/templates';
-import { Center, Loader } from '@mantine/core';
+import { Center, Loader, Stack, Text } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { deleteTemplate, getTemplates, saveTemplate } from '@/api/templateApi';
 import { OverviewPageTemplate, type NavigationCard } from '@/components';
+import { TileShapeSegmentedControl } from '@/components/simple/TileShapeSegmentedControl';
 
 export const Route = createFileRoute('/templates/')({
   component: Templates,
@@ -17,6 +18,7 @@ function Templates() {
 
   const [opened, { open, close }] = useDisclosure(false);
   const [name, setName] = useState('');
+  const [tileShapeType, setTileShapeType] = useState<'square' | 'hexagon'>('square');
 
   const templates = useQuery({
     queryKey: ['templates'],
@@ -43,12 +45,13 @@ function Templates() {
     const defaultTemplate: TemplateDefinition = {
       name,
       shape: [{ x: 0, y: 0 }],
-      tileShapeType: 'square',
+      tileShapeType,
       components: {},
     };
     const savedTemplate = await save.mutateAsync(defaultTemplate);
     close();
     setName('');
+    setTileShapeType('square'); // Reset to default
     navigate({ to: `/templates/${savedTemplate.id}` });
   };
 
@@ -85,6 +88,19 @@ function Templates() {
       onNameChange={setName}
       onSubmit={handleCreateTemplate}
       isLoading={save.isPending}
+      additionalModalContent={
+        <Stack gap="sm">
+          <Text size="sm" fw={500}>
+            Tile Shape
+          </Text>
+          <TileShapeSegmentedControl value={tileShapeType} onChange={setTileShapeType} />
+          <Text size="xs" c="dimmed">
+            Choose the grid type for your template. Square grids use rectangular positioning, while
+            hexagon grids use honeycomb patterns. This cannot be changed after creation as it would
+            break component positioning.
+          </Text>
+        </Stack>
+      }
     />
   );
 }

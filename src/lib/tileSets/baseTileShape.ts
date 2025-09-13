@@ -125,20 +125,19 @@ class HexagonTileShape extends BaseTileShape {
 
     const x = pos.x * ((3 / 4) * this.tileSize);
     const y = (pos.y * H) / 2;
-
     switch (vertexIndex) {
       case 0:
-        return { x: x + W / 4, y };
+        return { x: x - W / 2, y };
       case 1:
-        return { x: x + (3 * W) / 4, y };
+        return { x: x - W / 4, y: y - H / 2 };
       case 2:
-        return { x: x + W, y: y + H / 2 };
+        return { x: x + W / 4, y: y - H / 2 };
       case 3:
-        return { x: x + (3 * W) / 4, y: y + H };
+        return { x: x + W / 2, y };
       case 4:
-        return { x: x + W / 4, y: y + H };
+        return { x: x + W / 4, y: y + H / 2 };
       case 5:
-        return { x, y: y + H / 2 };
+        return { x: x - W / 4, y: y + H / 2 };
       default:
         throw new Error('Invalid vertex index for hexagon');
     }

@@ -106,16 +106,6 @@ function RouteComponent() {
       content: <TemplateBasicInfo template={template} onTemplateChange={onTemplateChange} />,
     },
     {
-      title: 'Shape Settings',
-      content: (
-        <TemplateShapeSettings
-          template={template}
-          onTemplateChange={onTemplateChange}
-          disabled={editLocked}
-        />
-      ),
-    },
-    {
       title: 'Components',
       content: (
         <TemplateComponentsManager

@@ -34,8 +34,9 @@ export function TemplateShapeSettings({
         size="sm"
       />
       <Text size="xs" c="dimmed">
-        Choose the base tile shape for this template. Square tiles form rectangular grids, while
-        hexagonal tiles form honeycomb patterns.
+        {disabled
+          ? 'Tile shape cannot be changed after template creation to preserve component positioning.'
+          : 'Choose the base tile shape for this template. Square tiles form rectangular grids, while hexagonal tiles form honeycomb patterns.'}
       </Text>
     </Stack>
   );

@@ -1,8 +1,7 @@
 import { GridPosition } from '@shared/templates';
-import { BaseTileShape, getTileShape } from './tileSets/baseTileShape';
+import { BaseTileShape } from './tileSets/baseTileShape';
 
 type PolygonVertex = { x: number; y: number };
-type TileEdgeCount = 3 | 4 | 6;
 
 function encodeCoordinate(point: PolygonVertex): string {
   return `${point.x},${point.y}`;
@@ -16,11 +15,7 @@ function decodeCoordinate(encoded: string): PolygonVertex {
 function findOuterEdge(gridCoordinates: GridPosition[]): GridPosition {
   let rightMostTile: GridPosition | null = gridCoordinates[0];
   for (const coord of gridCoordinates) {
-    if (
-      rightMostTile === null ||
-      coord.x > rightMostTile.x ||
-      (coord.x === rightMostTile.x && coord.y > rightMostTile.y)
-    ) {
+    if (rightMostTile === null || coord.x < rightMostTile.x) {
       rightMostTile = coord;
     }
   }
@@ -41,26 +36,27 @@ function followLeftHandSide(
 ) {
   const current = start;
   let facingDirection = direction;
-
-  const visitKey = encodeVisited(current, facingDirection);
-  if (visited.has(visitKey)) {
-    return;
-  }
-  visited.add(visitKey);
+  // console.log('At tile', current, 'facing', facingDirection, 'visitsed:', visited);
 
   let dir = shaper.turnAround(facingDirection);
   for (let i = 0; i < shaper.edgeCount; i++) {
+    // if (visited.has(checkVisitKey)) return;
     dir = shaper.turnRight(dir);
+    const checkVisitKey = encodeVisited(current, dir);
+    if (visited.has(checkVisitKey)) {
+      return;
+    }
     const tile = shaper.getAdjacentTileCoordinatesEncoded(current, dir);
+    // console.log('  Checking direction', dir, 'for tile', tile);
     if (tiles.has(tile)) {
       facingDirection = dir;
       break;
     } else {
       const edgeVertices = shaper.getVertexCoordinatesForEdge(current, dir);
       const encodedVertex = encodeCoordinate(edgeVertices[1]);
-      // if (pathedVertices.has(encodedVertex)) {
-      //   return;
-      // }
+
+      visited.add(checkVisitKey);
+      // console.log('  Adding vertex', edgeVertices[1]);
       pathedVertices.push(encodedVertex);
     }
     if (i === shaper.edgeCount - 1) {
@@ -86,8 +82,6 @@ export function generatePolygonVertices(
   if (gridCoordinates.length === 0) {
     return [];
   }
-
-  console.log('Generating polygon for', gridCoordinates, 'tiles');
 
   const encodedTiles = new Map<string, GridPosition>();
   gridCoordinates.forEach((coord) => {
