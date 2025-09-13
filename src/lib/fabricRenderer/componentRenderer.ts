@@ -44,7 +44,6 @@ export async function renderComponent(
 
   // Apply positioning and sizing
   const position = options.position || { x: 0, y: 0, rotation: 0, scale: 1 };
-  const baseScale = position.scale || 1;
   const contextScale = context.scale || 1;
 
   // Calculate scale to match component dimensions
@@ -55,16 +54,20 @@ export async function renderComponent(
   const naturalWidth = fabricObject.width;
   const naturalHeight = fabricObject.height;
 
-  // Calculate scale factors for width and height
-  const scaleX = (targetWidth / naturalWidth) * baseScale * contextScale;
-  const scaleY = (targetHeight / naturalHeight) * baseScale * contextScale;
+  // Calculate base scale factors to match target dimensions
+  const baseScaleX = targetWidth / naturalWidth;
+  const baseScaleY = targetHeight / naturalHeight;
+
+  // Apply context scaling (for zoom, etc.) but preserve component scaling from position
+  const finalScaleX = baseScaleX * contextScale;
+  const finalScaleY = baseScaleY * contextScale;
 
   fabricObject.set({
     left: position.x,
     top: position.y,
     angle: position.rotation,
-    scaleX,
-    scaleY,
+    scaleX: finalScaleX,
+    scaleY: finalScaleY,
     selectable: options.allowInteraction ?? false,
     evented: options.allowInteraction ?? false,
   });
@@ -75,8 +78,8 @@ export async function renderComponent(
   // Handle inner component with custom positioning
   if (choice.innerComponent) {
     const innerPosition: CanvasPosition = {
-      x: position.x + choice.innerComponent.position.x * scaleX,
-      y: position.y + choice.innerComponent.position.y * scaleY,
+      x: position.x + choice.innerComponent.position.x * finalScaleX,
+      y: position.y + choice.innerComponent.position.y * finalScaleY,
       rotation: position.rotation + choice.innerComponent.position.rotation,
       scale: position.scale * choice.innerComponent.position.scale,
     };

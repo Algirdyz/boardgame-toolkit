@@ -121,7 +121,7 @@ export function createDefaultTemplateSpecs(position: CanvasPosition): ComponentT
     position,
     maxCount: 1,
     rows: 1,
-    spacing: 60, // Default spacing between instances
+    spacing: 5, // Default spacing between instances
   };
 }
 

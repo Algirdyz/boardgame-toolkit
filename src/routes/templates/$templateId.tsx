@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { ComponentTemplateSpecs } from '@shared/components';
 import { TemplateDefinition } from '@shared/templates';
+import { Center, Loader } from '@mantine/core';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
 import { getComponents } from '@/api/componentApi';
 import { getTemplate, saveTemplate } from '@/api/templateApi';
+import { getVariables } from '@/api/variablesApi';
 import { EditorPageTemplate, TemplateBasicInfo, TemplateComponentsManager } from '@/components';
 import TemplateCanvas from '@/components/canvas/TemplateCanvas';
 import PendingComponent from '@/components/PendingComponent/PendingComponent';
@@ -34,9 +36,24 @@ function RouteComponent() {
     queryFn: getComponents,
   });
 
+  // Load variables for component rendering
+  const variables = useQuery({
+    queryKey: ['variables'],
+    queryFn: getVariables,
+  });
+
   const save = useMutation({
     mutationFn: saveTemplate,
   });
+
+  // Simple loading state
+  if (components.isLoading || variables.isLoading) {
+    return (
+      <Center style={{ height: '100vh' }}>
+        <Loader size="xl" />
+      </Center>
+    );
+  }
 
   const onTemplateChange = (updatedTemplate: TemplateDefinition) => {
     // This is the source of truth for the editor's current state.
@@ -116,7 +133,7 @@ function RouteComponent() {
         <TemplateComponentsManager
           template={template}
           onTemplateChange={onTemplateChange}
-          availableComponents={components.data || []}
+          availableComponents={components.data!}
           onAddComponent={addComponent}
           onUpdateComponentSpecs={updateComponentTemplateSpecs}
           onRemoveComponent={removeComponent}
@@ -135,6 +152,8 @@ function RouteComponent() {
           width={width}
           height={height}
           editLocked={editLocked}
+          availableComponents={components.data!}
+          variables={variables.data!}
         />
       )}
       onSave={() => save.mutate(template)}

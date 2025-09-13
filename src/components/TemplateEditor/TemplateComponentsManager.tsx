@@ -1,6 +1,6 @@
 import { ComponentStaticSpecs, ComponentTemplateSpecs } from '@shared/components';
 import { TemplateDefinition } from '@shared/templates';
-import { Button, Group, NumberInput, Select, Stack, Text } from '@mantine/core';
+import { Button, Center, Group, Loader, NumberInput, Select, Stack, Text } from '@mantine/core';
 import { IconPlus, IconTrash } from '@tabler/icons-react';
 import { generateComponentInstances } from '@/lib/componentInstanceUtils';
 
@@ -20,6 +20,15 @@ export function TemplateComponentsManager({
   onUpdateComponentSpecs,
   onRemoveComponent,
 }: TemplateComponentsManagerProps) {
+  // Simple loading check
+  if (!availableComponents.length) {
+    return (
+      <Center py="xl">
+        <Loader />
+      </Center>
+    );
+  }
+
   // Available components for dropdown
   const componentOptions = availableComponents.map((comp) => ({
     value: comp.id!.toString(),
@@ -50,8 +59,36 @@ export function TemplateComponentsManager({
       {Object.entries(template.components).map(([instanceId, instance]) => {
         const component = availableComponents.find((c) => c.id === instance.componentId);
         if (!component) {
-          console.error(`Component with ID ${instance.componentId} not found`);
-          return null;
+          return (
+            <Stack
+              key={instanceId}
+              gap="xs"
+              p="md"
+              style={{
+                backgroundColor: '#fff5f5',
+                border: '1px solid #fecaca',
+                borderRadius: '8px',
+              }}
+            >
+              <Group justify="space-between">
+                <Text size="sm" c="red" fw={500}>
+                  ⚠️ Component #{instance.componentId} not found
+                </Text>
+                <Button
+                  size="xs"
+                  color="red"
+                  variant="subtle"
+                  onClick={() => onRemoveComponent(instanceId)}
+                  leftSection={<IconTrash size={14} />}
+                >
+                  Remove
+                </Button>
+              </Group>
+              <Text size="xs" c="dimmed">
+                This component may have been deleted. Click "Remove" to clean up.
+              </Text>
+            </Stack>
+          );
         }
         const componentSize = { width: component.width, height: component.height };
         const instances = generateComponentInstances(

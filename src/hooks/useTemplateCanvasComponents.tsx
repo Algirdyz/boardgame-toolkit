@@ -1,17 +1,19 @@
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useEffect, useRef } from 'react';
+import { ComponentStaticSpecs, ComponentTemplateSpecs } from '@shared/components';
 import { TemplateDefinition } from '@shared/templates';
-import { useQuery } from '@tanstack/react-query';
+import { Variables } from '@shared/variables';
+import { notifications } from '@mantine/notifications';
 import * as fabric from 'fabric';
-import { getComponents } from '@/api/componentApi';
-import { getVariables } from '@/api/variablesApi';
 import { generateComponentInstances } from '@/lib/componentInstanceUtils';
-import { addComponentToCanvas, ComponentRenderOptions, RenderContext } from '@/lib/fabricRenderer';
+import { renderComponent, RenderContext } from '@/lib/fabricRenderer';
 
-interface UseTemplateCanvasComponentsOptions {
+interface UseTemplateCanvasComponentsProps {
   canvas: fabric.Canvas | null;
   template: TemplateDefinition;
   onTemplateChange: (template: TemplateDefinition) => void;
   shapeLocked: boolean;
+  availableComponents: ComponentStaticSpecs[];
+  variables: Variables;
 }
 
 export function useTemplateCanvasComponents({
@@ -19,207 +21,214 @@ export function useTemplateCanvasComponents({
   template,
   onTemplateChange,
   shapeLocked,
-}: UseTemplateCanvasComponentsOptions) {
-  const componentObjectsRef = useRef<Map<string, fabric.FabricObject>>(new Map());
+  availableComponents,
+  variables,
+}: UseTemplateCanvasComponentsProps) {
+  const groupsRef = useRef<Map<string, fabric.Group>>(new Map());
 
-  // Load variables and components
-  const { data: variables } = useQuery({
-    queryKey: ['variables'],
-    queryFn: getVariables,
-  });
+  // When shapeLocked is true, components should be selectable/moveable
+  // When shapeLocked is false, components should be locked (shape editing mode)
+  const componentsSelectable = shapeLocked;
 
-  const { data: components } = useQuery({
-    queryKey: ['components'],
-    queryFn: getComponents,
-  });
+  const bringComponentsToFront = () => {
+    if (!canvas) return;
 
-  // Create render context
-  const renderContext: RenderContext | null = useMemo(() => {
-    if (!canvas || !variables || !components) return null;
+    // Bring all component groups to front
+    groupsRef.current.forEach((group) => {
+      canvas.bringObjectToFront(group);
+    });
+    canvas.renderAll();
+  };
 
-    return {
+  const renderComponentGroup = async (
+    instanceId: string,
+    instance: { componentId: number; templateSpecs: ComponentTemplateSpecs },
+    component: ComponentStaticSpecs
+  ) => {
+    if (!canvas) return;
+
+    // Remove existing group if it exists
+    const existingGroup = groupsRef.current.get(instanceId);
+    if (existingGroup) {
+      canvas.remove(existingGroup);
+    }
+
+    // Generate component instances based on template specs
+    const componentSize = { width: component.width, height: component.height };
+    const instances = generateComponentInstances(instanceId, instance.templateSpecs, componentSize);
+
+    // Create render context for component rendering
+    const renderContext: RenderContext = {
       canvas,
       variables,
-      components,
+      components: availableComponents,
       scale: 1,
     };
-  }, [canvas, variables, components]);
 
-  // Clear component objects when canvas or template changes
-  const clearComponentObjects = useCallback(() => {
-    componentObjectsRef.current.forEach((obj) => {
-      if (canvas && canvas.contains(obj)) {
-        canvas.remove(obj);
+    // Create fabric objects for each instance
+    const fabricObjects: fabric.Object[] = [];
+
+    for (const inst of instances) {
+      try {
+        // Use the real component renderer
+        const fabricObj = await renderComponent(component.id!, renderContext, {
+          position: {
+            x: inst.position.x,
+            y: inst.position.y,
+            rotation: inst.position.rotation,
+            scale: inst.position.scale,
+          },
+          allowInteraction: false, // Individual objects in group should not be interactive
+        });
+
+        if (fabricObj) {
+          fabricObjects.push(fabricObj);
+        }
+      } catch (error) {
+        console.warn(`Failed to render component ${component.id}:`, error);
+        notifications.show({
+          title: 'Rendering Error',
+          message: `Failed to render component ${component.name}. Using placeholder instead.`,
+          color: 'red',
+        });
       }
+    }
+
+    if (fabricObjects.length === 0) return;
+
+    // Create a group for all instances of this component
+    const group = new fabric.Group(fabricObjects, {
+      left: instance.templateSpecs.position.x,
+      top: instance.templateSpecs.position.y,
+      scaleX: instance.templateSpecs.position.scale,
+      scaleY: instance.templateSpecs.position.scale,
+      angle: instance.templateSpecs.position.rotation,
+      selectable: componentsSelectable,
+      evented: componentsSelectable,
+      lockScalingX: true,
+      lockScalingY: true,
+      lockRotation: true,
     });
-    componentObjectsRef.current.clear();
-  }, [canvas]);
 
-  // Bring all components to front (above shape outline)
-  const bringComponentsToFront = useCallback(() => {
-    if (!canvas) return;
-    componentObjectsRef.current.forEach((obj) => {
-      canvas.bringObjectToFront(obj);
-    });
-    canvas.renderAll();
-  }, [canvas]);
+    // Store instance ID as custom property for identification
+    (group as any).instanceId = instanceId;
 
-  // Re-render all components when needed
-  useEffect(() => {
-    if (!renderContext || !canvas) return;
-
-    // Clear existing components
-    clearComponentObjects();
-
-    // Add canvas event listener to maintain z-order when objects are added
-    const handleObjectAdded = (e: { target: fabric.FabricObject }) => {
-      const obj = e.target;
-      // If a shape object was added, bring components to front
-      if (obj && !obj.get('isTemplateComponent')) {
-        setTimeout(() => bringComponentsToFront(), 10);
-      }
-    };
-
-    canvas.on('object:added', handleObjectAdded);
-
-    // Render each component instance
-    Object.entries(template.components).forEach(async ([instanceId, componentInstance]) => {
-      // Find the component definition to get its dimensions
-      const componentDefinition = components?.find((c) => c.id === componentInstance.componentId);
-      if (!componentDefinition) {
-        console.error(`Component with ID ${componentInstance.componentId} not found`);
-        return;
-      }
-      const componentSize = {
-        width: componentDefinition.width,
-        height: componentDefinition.height,
+    // Handle group movement - update template specs and save to DB
+    group.on('modified', () => {
+      const newPosition = {
+        x: group.left || 0,
+        y: group.top || 0,
+        scale: group.scaleX || 1,
+        rotation: group.angle || 0,
       };
 
-      // Generate multiple instances based on template specs
-      const instances = generateComponentInstances(
-        instanceId,
-        componentInstance.templateSpecs,
-        componentSize
-      );
+      onTemplateChange({
+        ...template,
+        components: {
+          ...template.components,
+          [instanceId]: {
+            ...instance,
+            templateSpecs: {
+              ...instance.templateSpecs,
+              position: newPosition,
+            },
+          },
+        },
+      });
+    });
 
-      // Render each instance
-      instances.forEach(async (instance, index) => {
-        const options: ComponentRenderOptions = {
-          position: instance.position,
-          choiceIndex: instance.choiceIndex, // Use the instance-specific choice
-          allowInteraction: shapeLocked, // Components are interactive when shape is locked
-        };
+    // Add group to canvas and store reference
+    canvas.add(group);
+    groupsRef.current.set(instanceId, group);
+  };
 
-        try {
-          const fabricObject = await addComponentToCanvas(
-            componentInstance.componentId,
-            renderContext,
-            options
-          );
+  const renderAllComponents = async () => {
+    if (!canvas) return;
 
-          if (fabricObject) {
-            // Store reference to the fabric object with unique key
-            const uniqueInstanceId = `${instanceId}_${index}`;
-            componentObjectsRef.current.set(uniqueInstanceId, fabricObject);
+    // Clear existing groups
+    groupsRef.current.forEach((group) => {
+      canvas.remove(group);
+    });
+    groupsRef.current.clear();
 
-            // Add metadata for identification
-            fabricObject.set('templateInstanceId', instanceId);
-            fabricObject.set('instanceIndex', index);
-            fabricObject.set('isTemplateComponent', true);
-
-            // Set interactivity - components are selectable when shape is locked
-            fabricObject.set({
-              selectable: shapeLocked,
-              evented: shapeLocked,
-            });
-
-            // Ensure component is always in front of the shape outline
-            canvas.bringObjectToFront(fabricObject);
-
-            // Handle position updates when object is modified
-            fabricObject.on('modified', () => {
-              if (!shapeLocked) return; // Only update positions when shape is locked (component mode)
-
-              const newPosition = {
-                x: fabricObject.left || 0,
-                y: fabricObject.top || 0,
-                rotation: fabricObject.angle || 0,
-                scale: fabricObject.scaleX || 1,
-              };
-
-              // For multi-instance components, we update the base position (first instance)
-              // and recalculate other instances based on spacing
-              if (index === 0) {
-                // Only update if position actually changed significantly
-                const currentPos = componentInstance.templateSpecs.position;
-                if (
-                  Math.abs(newPosition.x - currentPos.x) > 0.1 ||
-                  Math.abs(newPosition.y - currentPos.y) > 0.1 ||
-                  Math.abs(newPosition.rotation - currentPos.rotation) > 0.1 ||
-                  Math.abs(newPosition.scale - currentPos.scale) > 0.01
-                ) {
-                  onTemplateChange({
-                    ...template,
-                    components: {
-                      ...template.components,
-                      [instanceId]: {
-                        ...componentInstance,
-                        templateSpecs: {
-                          ...componentInstance.templateSpecs,
-                          position: newPosition,
-                        },
-                      },
-                    },
-                  });
-                }
-              }
-            });
-
-            // Ensure component stays in front when being moved
-            fabricObject.on('moving', () => {
-              canvas.bringObjectToFront(fabricObject);
-            });
-          }
-        } catch (error) {
-          console.error(`Failed to render component instance ${instanceId}_${index}:`, error);
+    // Render each component instance as a group
+    const renderPromises = Object.entries(template.components).map(
+      async ([instanceId, instance]) => {
+        const component = availableComponents.find((c) => c.id === instance.componentId);
+        if (component) {
+          await renderComponentGroup(instanceId, instance, component);
         }
-      });
-    });
-
-    // Bring all components to front after rendering
-    bringComponentsToFront();
-    canvas.renderAll();
-
-    // Cleanup function
-    return () => {
-      canvas.off('object:added', handleObjectAdded);
-    };
-  }, [renderContext, JSON.stringify(template.components), shapeLocked, bringComponentsToFront]); // Use JSON.stringify to detect component changes
-
-  // Update interactivity when shape lock changes
-  useEffect(() => {
-    componentObjectsRef.current.forEach((obj) => {
-      obj.set({
-        selectable: shapeLocked,
-        evented: shapeLocked,
-      });
-      // Ensure components stay in front when interactivity changes
-      if (canvas) {
-        canvas.bringObjectToFront(obj);
       }
-    });
-    canvas?.renderAll();
-  }, [shapeLocked, canvas]);
+    );
 
-  // Clean up on unmount
+    await Promise.all(renderPromises);
+    canvas.renderAll();
+  };
+
+  // Function to update component specs from GUI controls
+  const updateComponentSpecs = async (
+    instanceId: string,
+    updates: Partial<ComponentTemplateSpecs>
+  ) => {
+    const instance = template.components[instanceId];
+    if (!instance) return;
+
+    // Update template specs
+    const updatedInstance = {
+      ...instance,
+      templateSpecs: {
+        ...instance.templateSpecs,
+        ...updates,
+      },
+    };
+
+    onTemplateChange({
+      ...template,
+      components: {
+        ...template.components,
+        [instanceId]: updatedInstance,
+      },
+    });
+
+    // Re-render this specific component group
+    const component = availableComponents.find((c) => c.id === instance.componentId);
+    if (component) {
+      await renderComponentGroup(instanceId, updatedInstance, component);
+      canvas?.renderAll();
+    }
+  };
+
+  // Re-render when template or available components change
+  useEffect(() => {
+    renderAllComponents();
+  }, [canvas, template, availableComponents, variables]);
+
+  // Update existing groups when shapeLocked changes
+  useEffect(() => {
+    if (!canvas) return;
+    
+    groupsRef.current.forEach((group) => {
+      group.set({
+        selectable: componentsSelectable,
+        evented: componentsSelectable,
+      });
+    });
+    canvas.renderAll();
+  }, [canvas, componentsSelectable]);
+
+  // Clean up groups when unmounting
   useEffect(() => {
     return () => {
-      clearComponentObjects();
+      groupsRef.current.forEach((group) => {
+        canvas?.remove(group);
+      });
+      groupsRef.current.clear();
     };
-  }, [clearComponentObjects]);
+  }, [canvas]);
 
   return {
-    componentObjects: componentObjectsRef.current,
+    updateComponentSpecs,
+    renderAllComponents,
     bringComponentsToFront,
   };
 }

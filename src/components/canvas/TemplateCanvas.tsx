@@ -1,4 +1,6 @@
+import { ComponentStaticSpecs } from '@shared/components';
 import { TemplateDefinition } from '@shared/templates';
+import { Variables } from '@shared/variables';
 import { useCanvasInteractions } from '@/hooks/useCanvasInteractions';
 import useFabricCanvas from '@/hooks/useFabricCanvas';
 import useShapeGenerator from '@/hooks/useShapeGenerator';
@@ -10,10 +12,13 @@ interface TemplateCanvasProps {
   template: TemplateDefinition;
   onTemplateChange: (template: TemplateDefinition) => void;
   editLocked: boolean;
+  availableComponents: ComponentStaticSpecs[];
+  variables: Variables;
 }
 
 export default function TemplateCanvas(props: TemplateCanvasProps) {
-  const { template, onTemplateChange, width, height, editLocked } = props;
+  const { template, onTemplateChange, width, height, editLocked, availableComponents, variables } =
+    props;
 
   const { canvasHtmlRef, canvasRef } = useFabricCanvas(width, height);
   useCanvasInteractions({
@@ -30,6 +35,8 @@ export default function TemplateCanvas(props: TemplateCanvasProps) {
     template,
     onTemplateChange,
     shapeLocked: editLocked, // When editLocked is true, shape editing is locked, so components can be moved
+    availableComponents,
+    variables,
   });
 
   // Handle shape generation (the tile outline)
