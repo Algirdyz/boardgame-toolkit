@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import * as fabric from 'fabric';
 import { getComponents } from '@/api/componentApi';
 import { getVariables } from '@/api/variablesApi';
+import { generateComponentInstances } from '@/lib/componentInstanceUtils';
 import { addComponentToCanvas, ComponentRenderOptions, RenderContext } from '@/lib/fabricRenderer';
 
 interface UseTemplateCanvasComponentsOptions {
@@ -83,79 +84,106 @@ export function useTemplateCanvasComponents({
 
     // Render each component instance
     Object.entries(template.components).forEach(async ([instanceId, componentInstance]) => {
-      const options: ComponentRenderOptions = {
-        position: componentInstance.templateSpecs.position,
-        choiceIndex: 0, // Default to first choice
-        allowInteraction: shapeLocked, // Components are interactive when shape is locked
+      // Find the component definition to get its dimensions
+      const componentDefinition = components?.find((c) => c.id === componentInstance.componentId);
+      if (!componentDefinition) {
+        console.error(`Component with ID ${componentInstance.componentId} not found`);
+        return;
+      }
+      const componentSize = {
+        width: componentDefinition.width,
+        height: componentDefinition.height,
       };
 
-      try {
-        const fabricObject = await addComponentToCanvas(
-          componentInstance.componentId,
-          renderContext,
-          options
-        );
+      // Generate multiple instances based on template specs
+      const instances = generateComponentInstances(
+        instanceId,
+        componentInstance.templateSpecs,
+        componentSize
+      );
 
-        if (fabricObject) {
-          // Store reference to the fabric object
-          componentObjectsRef.current.set(instanceId, fabricObject);
+      // Render each instance
+      instances.forEach(async (instance, index) => {
+        const options: ComponentRenderOptions = {
+          position: instance.position,
+          choiceIndex: instance.choiceIndex, // Use the instance-specific choice
+          allowInteraction: shapeLocked, // Components are interactive when shape is locked
+        };
 
-          // Add metadata for identification
-          fabricObject.set('templateInstanceId', instanceId);
-          fabricObject.set('isTemplateComponent', true);
+        try {
+          const fabricObject = await addComponentToCanvas(
+            componentInstance.componentId,
+            renderContext,
+            options
+          );
 
-          // Set interactivity - components are selectable when shape is locked
-          fabricObject.set({
-            selectable: shapeLocked,
-            evented: shapeLocked,
-          });
+          if (fabricObject) {
+            // Store reference to the fabric object with unique key
+            const uniqueInstanceId = `${instanceId}_${index}`;
+            componentObjectsRef.current.set(uniqueInstanceId, fabricObject);
 
-          // Ensure component is always in front of the shape outline
-          canvas.bringObjectToFront(fabricObject);
+            // Add metadata for identification
+            fabricObject.set('templateInstanceId', instanceId);
+            fabricObject.set('instanceIndex', index);
+            fabricObject.set('isTemplateComponent', true);
 
-          // Handle position updates when object is modified
-          fabricObject.on('modified', () => {
-            if (!shapeLocked) return; // Only update positions when shape is locked (component mode)
+            // Set interactivity - components are selectable when shape is locked
+            fabricObject.set({
+              selectable: shapeLocked,
+              evented: shapeLocked,
+            });
 
-            const newPosition = {
-              x: fabricObject.left || 0,
-              y: fabricObject.top || 0,
-              rotation: fabricObject.angle || 0,
-              scale: fabricObject.scaleX || 1,
-            };
-
-            // Only update if position actually changed significantly
-            const currentPos = componentInstance.templateSpecs.position;
-            if (
-              Math.abs(newPosition.x - currentPos.x) > 0.1 ||
-              Math.abs(newPosition.y - currentPos.y) > 0.1 ||
-              Math.abs(newPosition.rotation - currentPos.rotation) > 0.1 ||
-              Math.abs(newPosition.scale - currentPos.scale) > 0.01
-            ) {
-              onTemplateChange({
-                ...template,
-                components: {
-                  ...template.components,
-                  [instanceId]: {
-                    ...componentInstance,
-                    templateSpecs: {
-                      ...componentInstance.templateSpecs,
-                      position: newPosition,
-                    },
-                  },
-                },
-              });
-            }
-          });
-
-          // Ensure component stays in front when being moved
-          fabricObject.on('moving', () => {
+            // Ensure component is always in front of the shape outline
             canvas.bringObjectToFront(fabricObject);
-          });
+
+            // Handle position updates when object is modified
+            fabricObject.on('modified', () => {
+              if (!shapeLocked) return; // Only update positions when shape is locked (component mode)
+
+              const newPosition = {
+                x: fabricObject.left || 0,
+                y: fabricObject.top || 0,
+                rotation: fabricObject.angle || 0,
+                scale: fabricObject.scaleX || 1,
+              };
+
+              // For multi-instance components, we update the base position (first instance)
+              // and recalculate other instances based on spacing
+              if (index === 0) {
+                // Only update if position actually changed significantly
+                const currentPos = componentInstance.templateSpecs.position;
+                if (
+                  Math.abs(newPosition.x - currentPos.x) > 0.1 ||
+                  Math.abs(newPosition.y - currentPos.y) > 0.1 ||
+                  Math.abs(newPosition.rotation - currentPos.rotation) > 0.1 ||
+                  Math.abs(newPosition.scale - currentPos.scale) > 0.01
+                ) {
+                  onTemplateChange({
+                    ...template,
+                    components: {
+                      ...template.components,
+                      [instanceId]: {
+                        ...componentInstance,
+                        templateSpecs: {
+                          ...componentInstance.templateSpecs,
+                          position: newPosition,
+                        },
+                      },
+                    },
+                  });
+                }
+              }
+            });
+
+            // Ensure component stays in front when being moved
+            fabricObject.on('moving', () => {
+              canvas.bringObjectToFront(fabricObject);
+            });
+          }
+        } catch (error) {
+          console.error(`Failed to render component instance ${instanceId}_${index}:`, error);
         }
-      } catch (error) {
-        console.error(`Failed to render component instance ${instanceId}:`, error);
-      }
+      });
     });
 
     // Bring all components to front after rendering

@@ -2,6 +2,7 @@ import { ComponentStaticSpecs, ComponentTemplateSpecs } from '@shared/components
 import { TemplateDefinition } from '@shared/templates';
 import { Button, Group, NumberInput, Select, Stack, Text } from '@mantine/core';
 import { IconPlus, IconTrash } from '@tabler/icons-react';
+import { generateComponentInstances } from '@/lib/componentInstanceUtils';
 
 interface TemplateComponentsManagerProps {
   template: TemplateDefinition;
@@ -48,6 +49,20 @@ export function TemplateComponentsManager({
 
       {Object.entries(template.components).map(([instanceId, instance]) => {
         const component = availableComponents.find((c) => c.id === instance.componentId);
+        if (!component) {
+          console.error(`Component with ID ${instance.componentId} not found`);
+          return null;
+        }
+        const componentSize = { width: component.width, height: component.height };
+        const instances = generateComponentInstances(
+          instanceId,
+          instance.templateSpecs,
+          componentSize
+        );
+        const componentsPerRow = Math.ceil(
+          instance.templateSpecs.maxCount / instance.templateSpecs.rows
+        );
+
         return (
           <Stack
             key={instanceId}
@@ -62,6 +77,9 @@ export function TemplateComponentsManager({
             <Group justify="space-between">
               <Text size="sm" fw={500}>
                 {component?.name || 'Unknown Component'}
+                <Text size="xs" c="dimmed" span ml={8}>
+                  ({instances.length} instance{instances.length !== 1 ? 's' : ''})
+                </Text>
               </Text>
               <Button
                 size="xs"
@@ -92,6 +110,7 @@ export function TemplateComponentsManager({
                   onUpdateComponentSpecs(instanceId, { rows: Number(value) || 1 })
                 }
                 min={1}
+                max={instance.templateSpecs.maxCount}
                 size="xs"
               />
             </Group>
@@ -107,7 +126,8 @@ export function TemplateComponentsManager({
             />
 
             <Text size="xs" c="dimmed">
-              Position: ({instance.templateSpecs.position.x.toFixed(1)},{' '}
+              Layout: {componentsPerRow} per row • Position: (
+              {instance.templateSpecs.position.x.toFixed(1)},{' '}
               {instance.templateSpecs.position.y.toFixed(1)}) • Rotation:{' '}
               {instance.templateSpecs.position.rotation}° • Scale:{' '}
               {(instance.templateSpecs.position.scale * 100).toFixed(0)}%

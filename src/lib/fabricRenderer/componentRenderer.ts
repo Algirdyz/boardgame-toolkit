@@ -42,16 +42,29 @@ export async function renderComponent(
     return null;
   }
 
-  // Apply positioning
+  // Apply positioning and sizing
   const position = options.position || { x: 0, y: 0, rotation: 0, scale: 1 };
-  const finalScale = (position.scale || 1) * (context.scale || 1);
+  const baseScale = position.scale || 1;
+  const contextScale = context.scale || 1;
+
+  // Calculate scale to match component dimensions
+  const targetWidth = component.width;
+  const targetHeight = component.height;
+
+  // Get the natural size of the fabric object
+  const naturalWidth = fabricObject.width;
+  const naturalHeight = fabricObject.height;
+
+  // Calculate scale factors for width and height
+  const scaleX = (targetWidth / naturalWidth) * baseScale * contextScale;
+  const scaleY = (targetHeight / naturalHeight) * baseScale * contextScale;
 
   fabricObject.set({
     left: position.x,
     top: position.y,
     angle: position.rotation,
-    scaleX: finalScale,
-    scaleY: finalScale,
+    scaleX,
+    scaleY,
     selectable: options.allowInteraction ?? false,
     evented: options.allowInteraction ?? false,
   });
@@ -62,8 +75,8 @@ export async function renderComponent(
   // Handle inner component with custom positioning
   if (choice.innerComponent) {
     const innerPosition: CanvasPosition = {
-      x: position.x + choice.innerComponent.position.x * finalScale,
-      y: position.y + choice.innerComponent.position.y * finalScale,
+      x: position.x + choice.innerComponent.position.x * scaleX,
+      y: position.y + choice.innerComponent.position.y * scaleY,
       rotation: position.rotation + choice.innerComponent.position.rotation,
       scale: position.scale * choice.innerComponent.position.scale,
     };

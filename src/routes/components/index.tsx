@@ -44,6 +44,8 @@ function Components() {
       name,
       description: '',
       shapeId: 1, // Default to first shape
+      width: 50,
+      height: 50,
       choices: [
         {
           id: 1,

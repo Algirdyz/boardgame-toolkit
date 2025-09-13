@@ -8,6 +8,7 @@ import { getTemplate, saveTemplate } from '@/api/templateApi';
 import { EditorPageTemplate, TemplateBasicInfo, TemplateComponentsManager } from '@/components';
 import TemplateCanvas from '@/components/canvas/TemplateCanvas';
 import PendingComponent from '@/components/PendingComponent/PendingComponent';
+import { createDefaultTemplateSpecs, updateTemplateSpecs } from '@/lib/componentInstanceUtils';
 
 export const Route = createFileRoute('/templates/$templateId')({
   component: RouteComponent,
@@ -54,17 +55,14 @@ function RouteComponent() {
     const offsetX = (existingComponents.length % 3) * 150; // 3 components per row
     const offsetY = Math.floor(existingComponents.length / 3) * 150; // New row every 3 components
 
-    const defaultTemplateSpecs: ComponentTemplateSpecs = {
-      position: {
-        x: baseX + offsetX,
-        y: baseY + offsetY,
-        rotation: 0,
-        scale: 1,
-      },
-      maxCount: 1,
-      rows: 1,
-      spacing: 10,
+    const defaultPosition = {
+      x: baseX + offsetX,
+      y: baseY + offsetY,
+      rotation: 0,
+      scale: 1,
     };
+
+    const defaultTemplateSpecs = createDefaultTemplateSpecs(defaultPosition);
 
     onTemplateChange({
       ...template,
@@ -85,16 +83,15 @@ function RouteComponent() {
     const instance = template.components[instanceId];
     if (!instance) return;
 
+    const updatedSpecs = updateTemplateSpecs(updates, instance.templateSpecs);
+
     onTemplateChange({
       ...template,
       components: {
         ...template.components,
         [instanceId]: {
           ...instance,
-          templateSpecs: {
-            ...instance.templateSpecs,
-            ...updates,
-          },
+          templateSpecs: updatedSpecs,
         },
       },
     });

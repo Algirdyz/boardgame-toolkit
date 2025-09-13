@@ -24,6 +24,8 @@ export interface ComponentStaticSpecs {
   name: string;
   description?: string;
   shapeId: number;
+  width: number; // Component width in pixels
+  height: number; // Component height in pixels
 
   choices: ChoiceOption[];
 }

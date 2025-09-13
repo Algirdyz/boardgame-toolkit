@@ -188,6 +188,34 @@ function RouteComponent() {
                   })
                 }
               />
+
+              <Group grow>
+                <TextInput
+                  label="Width"
+                  type="number"
+                  min={1}
+                  value={component.width?.toString() || ''}
+                  onChange={(e) =>
+                    onComponentChange({
+                      ...component,
+                      width: parseInt(e.target.value, 10) || 50,
+                    })
+                  }
+                />
+
+                <TextInput
+                  label="Height"
+                  type="number"
+                  min={1}
+                  value={component.height?.toString() || ''}
+                  onChange={(e) =>
+                    onComponentChange({
+                      ...component,
+                      height: parseInt(e.target.value, 10) || 50,
+                    })
+                  }
+                />
+              </Group>
             </Stack>
           </Paper>
 
