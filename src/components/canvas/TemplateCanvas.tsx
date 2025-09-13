@@ -37,7 +37,9 @@ export default function TemplateCanvas(props: TemplateCanvasProps) {
       const updatedTemplate: TemplateDefinition = { ...props.template, shape: newShape };
       onTemplateChange(updatedTemplate);
     },
-    editLocked
+    editLocked,
+    undefined, // enforceZOrder
+    template.tileShapeType || 'square'
   );
 
   return <canvas ref={canvasHtmlRef} />;

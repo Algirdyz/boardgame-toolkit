@@ -41,6 +41,7 @@ export interface TemplateDefinition {
   id?: number;
   shape: GridPosition[];
   name: string;
+  tileShapeType?: 'square' | 'hexagon'; // Default to square for backwards compatibility
   components: {
     [componentInstanceId: string]: {
       componentId: number;

@@ -5,7 +5,12 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
 import { getComponents } from '@/api/componentApi';
 import { getTemplate, saveTemplate } from '@/api/templateApi';
-import { EditorPageTemplate, TemplateBasicInfo, TemplateComponentsManager } from '@/components';
+import {
+  EditorPageTemplate,
+  TemplateBasicInfo,
+  TemplateComponentsManager,
+  TemplateShapeSettings,
+} from '@/components';
 import TemplateCanvas from '@/components/canvas/TemplateCanvas';
 import PendingComponent from '@/components/PendingComponent/PendingComponent';
 
@@ -99,6 +104,16 @@ function RouteComponent() {
     {
       title: 'Basic Information',
       content: <TemplateBasicInfo template={template} onTemplateChange={onTemplateChange} />,
+    },
+    {
+      title: 'Shape Settings',
+      content: (
+        <TemplateShapeSettings
+          template={template}
+          onTemplateChange={onTemplateChange}
+          disabled={editLocked}
+        />
+      ),
     },
     {
       title: 'Components',

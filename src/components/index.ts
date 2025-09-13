@@ -6,4 +6,8 @@ export { GlobalNavbar } from './GlobalNavbar';
 export { SharedAppShell } from './SharedAppShell';
 
 // Template Editor Components
-export { TemplateBasicInfo, TemplateComponentsManager } from './TemplateEditor';
+export {
+  TemplateBasicInfo,
+  TemplateComponentsManager,
+  TemplateShapeSettings,
+} from './TemplateEditor';

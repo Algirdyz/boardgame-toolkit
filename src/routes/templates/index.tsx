@@ -43,6 +43,7 @@ function Templates() {
     const defaultTemplate: TemplateDefinition = {
       name,
       shape: [{ x: 0, y: 0 }],
+      tileShapeType: 'square',
       components: {},
     };
     const savedTemplate = await save.mutateAsync(defaultTemplate);

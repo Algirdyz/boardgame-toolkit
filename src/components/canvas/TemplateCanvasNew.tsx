@@ -30,7 +30,8 @@ export default function TemplateCanvas(props: TemplateCanvasProps) {
       onTemplateChange(updatedTemplate);
     },
     editLocked,
-    () => {} // No z-order enforcement needed for shape only
+    () => {}, // No z-order enforcement needed for shape only
+    template.tileShapeType || 'square'
   );
 
   // TODO: Add component rendering here based on template.components
