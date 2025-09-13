@@ -300,14 +300,6 @@ function RouteComponent() {
               ))}
             </Stack>
           </Paper>
-
-          <Button
-            leftSection={<IconDeviceFloppy />}
-            loading={save.isPending}
-            onClick={() => save.mutate(component)}
-          >
-            Save Component
-          </Button>
         </Stack>
       </Box>
 

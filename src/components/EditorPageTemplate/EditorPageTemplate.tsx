@@ -64,21 +64,6 @@ export function EditorPageTemplate({
             />
           </Group>
 
-          <Paper p="md" withBorder>
-            <Stack gap="md">
-              <Title order={4}>Actions</Title>
-              <Button
-                fullWidth
-                loading={isSaving}
-                leftSection={<IconDeviceFloppy />}
-                onClick={onSave}
-                disabled={isSaving}
-              >
-                Save
-              </Button>
-            </Stack>
-          </Paper>
-
           {sections.map((section, index) => (
             <Paper key={index} p="md" withBorder>
               <Stack gap="md">
