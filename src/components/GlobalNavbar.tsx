@@ -5,6 +5,7 @@ import { Group, NavLink } from '@mantine/core';
 import {
   IconComponents,
   IconGlobe,
+  IconGrid3x3,
   IconHome,
   IconSettings,
   IconTemplate,
@@ -24,9 +25,9 @@ export function GlobalNavbar() {
       <NavLink
         w="fit-content"
         component={Link}
-        to="/tile"
+        to="/tiles"
         label="Tiles"
-        leftSection={<IconTemplate size="1rem" stroke={1.5} />}
+        leftSection={<IconGrid3x3 size="1rem" stroke={1.5} />}
       />
       <NavLink
         w="fit-content"

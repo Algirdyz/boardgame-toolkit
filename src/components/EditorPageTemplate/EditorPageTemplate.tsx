@@ -14,10 +14,11 @@ interface EditorPageTemplateProps {
   onSave: () => void;
   isSaving?: boolean;
 
-  // Edit lock functionality
-  editLocked: boolean;
-  onEditLockChange: (locked: boolean) => void;
+  // Edit lock functionality (optional)
+  editLocked?: boolean;
+  onEditLockChange?: (locked: boolean) => void;
   editLockLabel?: string;
+  showEditLock?: boolean;
 
   // Sidebar content sections
   sections: {
@@ -34,9 +35,10 @@ export function EditorPageTemplate({
   canvasElement,
   onSave,
   isSaving = false,
-  editLocked,
+  editLocked = false,
   onEditLockChange,
   editLockLabel = 'Lock Edit',
+  showEditLock = true,
   sections,
   sidebarWidth = 350,
 }: EditorPageTemplateProps) {
@@ -57,11 +59,13 @@ export function EditorPageTemplate({
         <Stack gap="md" p="md">
           <Group justify="space-between">
             <Title order={3}>{title}</Title>
-            <Switch
-              label={editLockLabel}
-              checked={editLocked}
-              onChange={(event) => onEditLockChange(event.currentTarget.checked)}
-            />
+            {showEditLock && onEditLockChange && (
+              <Switch
+                label={editLockLabel}
+                checked={editLocked}
+                onChange={(event) => onEditLockChange(event.currentTarget.checked)}
+              />
+            )}
           </Group>
 
           {sections.map((section, index) => (

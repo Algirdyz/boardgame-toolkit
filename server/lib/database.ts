@@ -46,6 +46,16 @@ export function initializeDatabase() {
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
+
+  // Tiles table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS tiles (
+      tileId INTEGER PRIMARY KEY AUTOINCREMENT,
+      definition TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
 }
 
 // Initialize database on import

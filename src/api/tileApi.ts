@@ -1,3 +1,5 @@
+import { ensureTileDefaults, TileDefinition } from '@shared/tiles';
+
 export async function getTiles(): Promise<TileDefinition[]> {
   const response = await fetch('/api/tiles');
   if (!response.ok) throw new Error('Network response was not ok');
@@ -21,4 +23,11 @@ export async function getTile(tileId: number): Promise<TileDefinition> {
   if (!response.ok) throw new Error('Network response was not ok');
   const tile = await response.json();
   return ensureTileDefaults(tile);
+}
+
+export async function deleteTile(tileId: number): Promise<void> {
+  const response = await fetch(`/api/tiles/${tileId}`, {
+    method: 'DELETE',
+  });
+  if (!response.ok) throw new Error('Network response was not ok');
 }
