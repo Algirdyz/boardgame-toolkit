@@ -1,17 +1,19 @@
 import { GridPosition } from '@shared/templates';
 import { describe, expect, it } from 'vitest';
 import { generatePolygonVertices } from '@/lib/polygoner';
+import { getTileShape } from '@/lib/tileSets/baseTileShape';
 
 describe('generatePolygonVertices', () => {
   describe('Basic functionality', () => {
     it('should return empty array for empty input', () => {
-      const result = generatePolygonVertices([], 100, 4);
+      const shaper = getTileShape(4, 100);
+      const result = generatePolygonVertices([], shaper);
       expect(result).toEqual([]);
     });
 
     it('should generate vertices for a single tile', () => {
       const gridCoordinates: GridPosition[] = [{ x: 0, y: 0 }];
-      const result = generatePolygonVertices(gridCoordinates, 100, 4);
+      const result = generatePolygonVertices(gridCoordinates, getTileShape(4, 100));
 
       expect(result).toBeDefined();
       expect(Array.isArray(result)).toBe(true);
@@ -33,7 +35,7 @@ describe('generatePolygonVertices', () => {
         { x: 0, y: 1 },
         { x: 1, y: 1 },
       ];
-      const result = generatePolygonVertices(gridCoordinates, 100, 4);
+      const result = generatePolygonVertices(gridCoordinates, getTileShape(4, 100));
 
       expect(result).toBeDefined();
       expect(Array.isArray(result)).toBe(true);
@@ -46,7 +48,7 @@ describe('generatePolygonVertices', () => {
         { x: 1, y: 0 },
         { x: 0, y: 1 },
       ];
-      const result = generatePolygonVertices(gridCoordinates, 100, 4);
+      const result = generatePolygonVertices(gridCoordinates, getTileShape(4, 100));
 
       expect(result).toBeDefined();
       expect(Array.isArray(result)).toBe(true);
@@ -58,20 +60,20 @@ describe('generatePolygonVertices', () => {
     const singleTile: GridPosition[] = [{ x: 0, y: 0 }];
 
     it('should handle tile size 50', () => {
-      const result = generatePolygonVertices(singleTile, 50, 4);
+      const result = generatePolygonVertices(singleTile, getTileShape(4, 50));
       expect(result).toBeDefined();
       expect(result.length).toBeGreaterThan(0);
     });
 
     it('should handle tile size 200', () => {
-      const result = generatePolygonVertices(singleTile, 200, 4);
+      const result = generatePolygonVertices(singleTile, getTileShape(4, 200));
       expect(result).toBeDefined();
       expect(result.length).toBeGreaterThan(0);
     });
 
     it('should scale vertices proportionally with tile size', () => {
-      const result1 = generatePolygonVertices(singleTile, 100, 4);
-      const result2 = generatePolygonVertices(singleTile, 200, 4);
+      const result1 = generatePolygonVertices(singleTile, getTileShape(4, 100));
+      const result2 = generatePolygonVertices(singleTile, getTileShape(4, 200));
 
       // With double tile size, coordinates should be roughly double
       // (allowing for some variance due to polygon generation algorithm)
@@ -86,7 +88,7 @@ describe('generatePolygonVertices', () => {
         { x: 0, y: -1 },
         { x: -1, y: 0 },
       ];
-      const result = generatePolygonVertices(gridCoordinates, 100, 4);
+      const result = generatePolygonVertices(gridCoordinates, getTileShape(4, 100));
       expect(result).toBeDefined();
       expect(Array.isArray(result)).toBe(true);
     });
@@ -97,7 +99,7 @@ describe('generatePolygonVertices', () => {
         { x: 5, y: 5 },
         { x: 10, y: 10 },
       ];
-      const result = generatePolygonVertices(gridCoordinates, 100, 4);
+      const result = generatePolygonVertices(gridCoordinates, getTileShape(4, 100));
       expect(result).toBeDefined();
       expect(Array.isArray(result)).toBe(true);
     });
@@ -108,7 +110,7 @@ describe('generatePolygonVertices', () => {
         { x: 0, y: 0 }, // Duplicate
         { x: 1, y: 0 },
       ];
-      const result = generatePolygonVertices(gridCoordinates, 100, 4);
+      const result = generatePolygonVertices(gridCoordinates, getTileShape(4, 100));
       expect(result).toBeDefined();
       expect(Array.isArray(result)).toBe(true);
     });
@@ -122,7 +124,7 @@ describe('generatePolygonVertices', () => {
         { x: 0, y: 1 },
         { x: 1, y: 1 },
       ];
-      const result = generatePolygonVertices(gridCoordinates, 100, 4);
+      const result = generatePolygonVertices(gridCoordinates, getTileShape(4, 100));
 
       expect(result.length).toBeGreaterThanOrEqual(4); // Minimum for a polygon
 
@@ -141,8 +143,8 @@ describe('generatePolygonVertices', () => {
         { x: 1, y: 0 },
         { x: 0, y: 1 },
       ];
-      const result1 = generatePolygonVertices(gridCoordinates, 100, 4);
-      const result2 = generatePolygonVertices(gridCoordinates, 100, 4);
+      const result1 = generatePolygonVertices(gridCoordinates, getTileShape(4, 100));
+      const result2 = generatePolygonVertices(gridCoordinates, getTileShape(4, 100));
 
       // Results should be consistent across multiple calls
       expect(result1).toEqual(result2);
@@ -154,7 +156,7 @@ describe('generatePolygonVertices', () => {
         { x: 1, y: 0 },
         { x: 2, y: 0 },
       ];
-      const result = generatePolygonVertices(gridCoordinates, 100, 4);
+      const result = generatePolygonVertices(gridCoordinates, getTileShape(4, 100));
       expect(result).toBeDefined();
       expect(result.length).toBeGreaterThan(0);
     });
@@ -165,7 +167,7 @@ describe('generatePolygonVertices', () => {
         { x: 0, y: 1 },
         { x: 0, y: 2 },
       ];
-      const result = generatePolygonVertices(gridCoordinates, 100, 4);
+      const result = generatePolygonVertices(gridCoordinates, getTileShape(4, 100));
       expect(result).toBeDefined();
       expect(result.length).toBeGreaterThan(0);
     });
@@ -179,7 +181,7 @@ describe('generatePolygonVertices', () => {
         { x: 2, y: 0 },
         { x: 1, y: 1 },
       ];
-      const result = generatePolygonVertices(gridCoordinates, 100, 4);
+      const result = generatePolygonVertices(gridCoordinates, getTileShape(4, 100));
       expect(result).toBeDefined();
       expect(result.length).toBeGreaterThan(0);
     });
@@ -192,7 +194,7 @@ describe('generatePolygonVertices', () => {
         { x: 2, y: 1 },
         { x: 1, y: 2 },
       ];
-      const result = generatePolygonVertices(gridCoordinates, 100, 4);
+      const result = generatePolygonVertices(gridCoordinates, getTileShape(4, 100));
       expect(result).toBeDefined();
       expect(result.length).toBeGreaterThan(0);
     });
@@ -203,7 +205,7 @@ describe('generatePolygonVertices', () => {
         { x: 1, y: 1 },
         { x: 2, y: 2 },
       ];
-      const result = generatePolygonVertices(gridCoordinates, 100, 4);
+      const result = generatePolygonVertices(gridCoordinates, getTileShape(4, 100));
       expect(result).toBeDefined();
       expect(result.length).toBeGreaterThan(0);
     });
@@ -222,7 +224,7 @@ describe('generatePolygonVertices', () => {
         { x: 1, y: 2 },
         { x: 2, y: 2 },
       ];
-      const result = generatePolygonVertices(gridCoordinates, 100, 4);
+      const result = generatePolygonVertices(gridCoordinates, getTileShape(4, 100));
       expect(result).toBeDefined();
       expect(result.length).toBeGreaterThan(0);
     });
@@ -239,7 +241,7 @@ describe('generatePolygonVertices', () => {
       }
 
       const startTime = performance.now();
-      const result = generatePolygonVertices(gridCoordinates, 100, 4);
+      const result = generatePolygonVertices(gridCoordinates, getTileShape(4, 100));
       const endTime = performance.now();
 
       expect(result).toBeDefined();
@@ -254,9 +256,9 @@ describe('generatePolygonVertices', () => {
         { x: 0, y: 1 },
       ];
 
-      const result1 = generatePolygonVertices(gridCoordinates, 100, 4);
-      const result2 = generatePolygonVertices(gridCoordinates, 100, 4);
-      const result3 = generatePolygonVertices(gridCoordinates, 100, 4);
+      const result1 = generatePolygonVertices(gridCoordinates, getTileShape(4, 100));
+      const result2 = generatePolygonVertices(gridCoordinates, getTileShape(4, 100));
+      const result3 = generatePolygonVertices(gridCoordinates, getTileShape(4, 100));
 
       expect(result1).toEqual(result2);
       expect(result2).toEqual(result3);
@@ -270,7 +272,7 @@ describe('Polygon utilities', () => {
     it('should encode and decode coordinates correctly', () => {
       // These are internal functions, but we can test the overall behavior
       const gridCoordinates: GridPosition[] = [{ x: 5, y: 10 }];
-      const result = generatePolygonVertices(gridCoordinates, 100, 4);
+      const result = generatePolygonVertices(gridCoordinates, getTileShape(4, 100));
 
       // Should handle coordinates with different magnitudes
       expect(result).toBeDefined();
@@ -282,7 +284,7 @@ describe('Polygon utilities', () => {
     it('should handle edge detection properly', () => {
       // Test that isolated tiles generate proper polygons
       const isolatedTile: GridPosition[] = [{ x: 0, y: 0 }];
-      const result = generatePolygonVertices(isolatedTile, 100, 4);
+      const result = generatePolygonVertices(isolatedTile, getTileShape(4, 100));
 
       expect(result).toBeDefined();
       expect(result.length).toBeGreaterThan(0);
