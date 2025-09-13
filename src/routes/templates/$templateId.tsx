@@ -5,15 +5,11 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
 import { getComponents } from '@/api/componentApi';
 import { getTemplate, saveTemplate } from '@/api/templateApi';
-import {
-  EditorPageTemplate,
-  TemplateBasicInfo,
-  TemplateComponentsManager,
-  TemplateShapeSettings,
-} from '@/components';
+import { EditorPageTemplate, TemplateBasicInfo, TemplateComponentsManager } from '@/components';
 import TemplateCanvas from '@/components/canvas/TemplateCanvas';
 import PendingComponent from '@/components/PendingComponent/PendingComponent';
 
+``;
 export const Route = createFileRoute('/templates/$templateId')({
   component: RouteComponent,
   pendingComponent: PendingComponent,

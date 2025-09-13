@@ -21,7 +21,7 @@ export function SharedAppShell({ children }: { children: ReactNode }) {
           <Burger opened={navbarOpened} onClick={toggleNavbar} hiddenFrom="sm" size="sm" />
           <Group justify="space-between" w="100%" align="center">
             <Group style={{ flex: 1 }}>
-              <Image src="/smalllogo.png" alt="Logo" h={30} w={30} />
+              <Image src="/LogoNoText.png" alt="Logo" h={50} w={50} />
               <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>
                 Board Game Toolkit
               </Link>
