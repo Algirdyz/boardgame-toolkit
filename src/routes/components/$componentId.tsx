@@ -312,11 +312,11 @@ function RouteComponent() {
       </Box>
 
       <Box style={{ flex: 1, height: '100%' }}>
-        {variables.data ? (
+        {variables.data && allComponents.data ? (
           <ComponentCanvas
             component={component}
             variables={variables.data}
-            allComponents={allComponents.data || []}
+            allComponents={allComponents.data}
           />
         ) : (
           <Flex align="center" justify="center" h="100%" bg="#f8f9fa">

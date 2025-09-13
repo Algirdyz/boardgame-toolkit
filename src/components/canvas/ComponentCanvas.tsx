@@ -1,10 +1,10 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { ComponentStaticSpecs } from '@shared/components';
 import { Variables } from '@shared/variables';
 import { ActionIcon, Badge, Box, Button, Group, Stack, Text } from '@mantine/core';
 import { useElementSize } from '@mantine/hooks';
 import { IconEye, IconEyeOff, IconRefresh } from '@tabler/icons-react';
-import * as fabric from 'fabric';
+import useFabricCanvas from '@/hooks/useFabricCanvas';
 import {
   addComponentToCanvas,
   clearCanvas,
@@ -23,8 +23,6 @@ export function ComponentCanvas({
   variables,
   allComponents = [],
 }: ComponentCanvasProps) {
-  const canvasRef = useRef<fabric.Canvas | null>(null);
-  const canvasElRef = useRef<HTMLCanvasElement>(null);
   const {
     ref: canvasContainerRef,
     width: containerWidth,
@@ -37,32 +35,11 @@ export function ComponentCanvas({
   // Calculate canvas dimensions with some padding
   const canvasWidth = Math.max(400, containerWidth - 20);
   const canvasHeight = Math.max(300, containerHeight - 20);
-
-  // Initialize canvas and handle resizing
-  useEffect(() => {
-    if (!canvasElRef.current || canvasWidth === 0 || canvasHeight === 0) return;
-
-    const canvas = new fabric.Canvas(canvasElRef.current, {
-      width: canvasWidth,
-      height: canvasHeight,
-      backgroundColor: '#ffffff',
-      selection: isInteractive,
-    });
-
-    canvasRef.current = canvas;
-
-    return () => {
-      canvas.dispose();
-      canvasRef.current = null;
-    };
-  }, [canvasWidth, canvasHeight, isInteractive]);
+  const { canvasHtmlRef, canvasRef } = useFabricCanvas(canvasWidth, canvasHeight);
 
   // Create render context
   const renderContext: RenderContext | null = React.useMemo(() => {
-    if (!canvasRef.current) return null;
-
     return {
-      canvas: canvasRef.current,
       variables,
       components: [component, ...allComponents],
       scale: 1,
@@ -71,17 +48,23 @@ export function ComponentCanvas({
 
   // Render component on canvas
   const renderComponent = useCallback(async () => {
-    if (!renderContext || !component.id) return;
+    if (!canvasRef.current || !component.id) return;
 
     setRenderError(null);
 
     try {
       // Clear canvas first
-      clearCanvas(renderContext.canvas);
+      clearCanvas(canvasRef.current);
 
-      // Calculate center position
-      const canvasWidth = renderContext.canvas.getWidth();
-      const canvasHeight = renderContext.canvas.getHeight();
+      // Calculate center position - ensure we have valid dimensions
+      const canvasWidth = canvasRef.current.getWidth();
+      const canvasHeight = canvasRef.current.getHeight();
+      
+      // Don't render if canvas doesn't have valid dimensions yet
+      if (canvasWidth <= 0 || canvasHeight <= 0) {
+        return;
+      }
+      
       const centerX = canvasWidth / 2;
       const centerY = canvasHeight / 2;
 
@@ -97,19 +80,19 @@ export function ComponentCanvas({
       };
 
       // Add component to canvas
-      await addComponentToCanvas(component.id, renderContext, renderOptions);
+      await addComponentToCanvas(canvasRef.current, component.id, renderContext, renderOptions);
     } catch (error) {
       console.error('Error rendering component:', error);
       setRenderError(error instanceof Error ? error.message : 'Unknown rendering error');
     }
   }, [renderContext, component.id, selectedChoiceIndex, isInteractive]);
 
-  // Re-render when dependencies change
+  // Re-render when dependencies change or when canvas dimensions are available
   useEffect(() => {
-    if (renderContext) {
+    if (renderContext && canvasWidth > 0 && canvasHeight > 0) {
       renderComponent();
     }
-  }, [renderComponent, renderContext]);
+  }, [renderComponent, renderContext, canvasWidth, canvasHeight]);
 
   const handleRefresh = () => {
     renderComponent();
@@ -206,7 +189,7 @@ export function ComponentCanvas({
           minHeight: 300, // Minimum height fallback
         }}
       >
-        <canvas ref={canvasElRef} />
+        <canvas ref={canvasHtmlRef} />
       </Box>
 
       {/* Info display */}

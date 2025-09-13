@@ -59,7 +59,6 @@ export function useTemplateCanvasComponents({
 
     // Create render context for component rendering
     const renderContext: RenderContext = {
-      canvas,
       variables,
       components: availableComponents,
       scale: 1,
@@ -206,7 +205,7 @@ export function useTemplateCanvasComponents({
   // Update existing groups when shapeLocked changes
   useEffect(() => {
     if (!canvas) return;
-    
+
     groupsRef.current.forEach((group) => {
       group.set({
         selectable: componentsSelectable,

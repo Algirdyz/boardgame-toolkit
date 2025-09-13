@@ -6,14 +6,15 @@ import { ComponentRenderOptions, RenderContext } from './types';
  * Utility function to add a rendered component to the canvas
  */
 export async function addComponentToCanvas(
+  canvas: fabric.Canvas,
   componentId: number,
   context: RenderContext,
   options: ComponentRenderOptions = {}
 ): Promise<fabric.FabricObject | null> {
   const fabricObject = await renderComponent(componentId, context, options);
   if (fabricObject) {
-    context.canvas.add(fabricObject);
-    context.canvas.renderAll();
+    canvas.add(fabricObject);
+    canvas.renderAll();
   }
   return fabricObject;
 }

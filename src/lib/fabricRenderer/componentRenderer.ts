@@ -68,6 +68,8 @@ export async function renderComponent(
     angle: position.rotation,
     scaleX: finalScaleX,
     scaleY: finalScaleY,
+    originX: 'center',
+    originY: 'center',
     selectable: options.allowInteraction ?? false,
     evented: options.allowInteraction ?? false,
   });
@@ -96,6 +98,10 @@ export async function renderComponent(
   // If we have multiple objects, group them
   if (nestedObjects.length > 1) {
     const group = new fabric.Group(nestedObjects, {
+      left: position.x,
+      top: position.y,
+      originX: 'center',
+      originY: 'center',
       selectable: options.allowInteraction ?? false,
       evented: options.allowInteraction ?? false,
     });
