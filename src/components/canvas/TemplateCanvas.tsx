@@ -2,6 +2,7 @@ import { TemplateDefinition } from '@shared/templates';
 import { useCanvasInteractions } from '@/hooks/useCanvasInteractions';
 import useFabricCanvas from '@/hooks/useFabricCanvas';
 import useShapeGenerator from '@/hooks/useShapeGenerator';
+import { useTemplateCanvasComponents } from '@/hooks/useTemplateCanvasComponents';
 
 interface TemplateCanvasProps {
   width: number;
@@ -21,15 +22,19 @@ export default function TemplateCanvas(props: TemplateCanvasProps) {
     zoomEnabled: true,
   });
 
-  // Handle all template components (worker slots, name, resource list, etc.)
-  // const { enforceZOrder } = useTemplateComponents({
-  //   canvas: canvasRef.current,
-  //   canvasWidth: width,
-  //   canvasHeight: height,
-  //   template,
-  //   onTemplateChange,
-  // });
+  // Handle template components rendering and interaction
+  // When editLocked=true: shape editing is disabled, components can be moved
+  // When editLocked=false: shape editing is enabled, components are locked
+  const { bringComponentsToFront } = useTemplateCanvasComponents({
+    canvas: canvasRef.current,
+    template,
+    onTemplateChange,
+    shapeLocked: editLocked, // When editLocked is true, shape editing is locked, so components can be moved
+  });
 
+  // Handle shape generation (the tile outline)
+  // When editLocked=true: shape editing is disabled
+  // When editLocked=false: shape editing is enabled
   useShapeGenerator(
     canvasRef.current,
     template.shape,
@@ -37,8 +42,8 @@ export default function TemplateCanvas(props: TemplateCanvasProps) {
       const updatedTemplate: TemplateDefinition = { ...props.template, shape: newShape };
       onTemplateChange(updatedTemplate);
     },
-    editLocked,
-    undefined, // enforceZOrder
+    editLocked, // When true, disables shape editing
+    bringComponentsToFront, // Ensure components stay in front after shape updates
     template.tileShapeType || 'square'
   );
 

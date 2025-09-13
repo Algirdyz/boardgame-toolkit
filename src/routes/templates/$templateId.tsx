@@ -9,7 +9,6 @@ import { EditorPageTemplate, TemplateBasicInfo, TemplateComponentsManager } from
 import TemplateCanvas from '@/components/canvas/TemplateCanvas';
 import PendingComponent from '@/components/PendingComponent/PendingComponent';
 
-``;
 export const Route = createFileRoute('/templates/$templateId')({
   component: RouteComponent,
   pendingComponent: PendingComponent,
@@ -47,8 +46,21 @@ function RouteComponent() {
   // Component management functions
   const addComponent = (componentId: number) => {
     const newInstanceId = `instance_${Date.now()}_${Math.random()}`;
+
+    // Calculate a better starting position to avoid overlap
+    const existingComponents = Object.values(template.components);
+    const baseX = 100;
+    const baseY = 100;
+    const offsetX = (existingComponents.length % 3) * 150; // 3 components per row
+    const offsetY = Math.floor(existingComponents.length / 3) * 150; // New row every 3 components
+
     const defaultTemplateSpecs: ComponentTemplateSpecs = {
-      position: { x: 50, y: 50, rotation: 0, scale: 1 },
+      position: {
+        x: baseX + offsetX,
+        y: baseY + offsetY,
+        rotation: 0,
+        scale: 1,
+      },
       maxCount: 1,
       rows: 1,
       spacing: 10,
