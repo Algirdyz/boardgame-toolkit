@@ -71,32 +71,37 @@ function TileEditor() {
     );
   }
 
-  const tile = tileQuery.data!;
-  const template = templateQuery.data!;
-  const components = componentsQuery.data || [];
-  const variables = variablesQuery.data!;
+  const tile = tileQuery.data;
+  const template = templateQuery.data;
+  const components = componentsQuery.data;
+  const variables = variablesQuery.data;
 
   return (
     <EditorPageTemplate
-      title={`Editing: ${tile.name}`}
+      title={`Editing: ${tile?.name}`}
       loading={isLoading}
-      canvasElement={(width, height) => (
-        <TileCanvas
-          tile={tile}
-          template={template}
-          components={components}
-          variables={variables}
-          width={width}
-          height={height}
-        />
-      )}
+      canvasElement={(width, height) =>
+        tile &&
+        template &&
+        components &&
+        variables && (
+          <TileCanvas
+            tile={tile}
+            template={template}
+            components={components}
+            variables={variables}
+            width={width}
+            height={height}
+          />
+        )
+      }
       onSave={handleSave}
       isSaving={saveMutation.isPending}
       showEditLock={false}
       sections={[
         {
           title: 'Template Info',
-          content: (
+          content: template && (
             <Stack gap="sm">
               <Text size="sm">
                 <strong>Template:</strong> {template.name}
@@ -110,7 +115,7 @@ function TileEditor() {
         },
         {
           title: 'Component Choices',
-          content: (
+          content: tile && template && components && (
             <TileComponentChoices
               tile={tile}
               template={template}
