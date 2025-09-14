@@ -2,6 +2,7 @@
   "name": "mantine-next-template",
   "version": "1.0.0",
   "private": true,
+  "homepage": "https://algirdyz.github.io/boardgame-toolkit/",
   "scripts": {
     "dev": "concurrently \"npm:dev:client\" \"npm:dev:server\"",
     "dev:client": "vite",
@@ -18,7 +19,9 @@
     "test:ui": "vitest --ui",
     "prettier:check": "prettier --check \"**/*.{ts,tsx}\"",
     "prettier:write": "prettier --write \"**/*.{ts,tsx}\"",
-    "ci": "npm run prettier:check && npm run lint && npm run typecheck && npm run test"
+    "ci": "npm run prettier:check && npm run lint && npm run typecheck && npm run test",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build"
   },
   "dependencies": {
     "@mantine/core": "8.3.1",
@@ -52,6 +55,7 @@
     "@testing-library/user-event": "^14.6.1",
     "@types/better-sqlite3": "^7.6.13",
     "@types/eslint-plugin-jsx-a11y": "^6",
+    "@types/gh-pages": "^6",
     "@types/node": "^24.3.1",
     "@types/react": "19.1.8",
     "@types/react-dom": "^19.1.9",
@@ -63,6 +67,7 @@
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "eslint-plugin-react": "^7.37.5",
+    "gh-pages": "^6.3.0",
     "jsdom": "^26.1.0",
     "postcss": "^8.5.5",
     "postcss-preset-mantine": "1.17.0",
