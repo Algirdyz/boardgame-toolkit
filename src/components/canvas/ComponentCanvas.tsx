@@ -34,12 +34,27 @@ export function ComponentCanvas({ component, variables, otherComponents }: Compo
     // Only create the component dict if we have a valid component ID
     if (!component?.id) return {} as ComponentDict;
 
+    // Calculate center position based on canvas dimensions
+    const centerX = canvasWidth / 2;
+    const centerY = canvasHeight / 2;
+
     return {
       targetComponent: {
         componentId: component.id,
+        templateSpecs: {
+          maxCount: 1,
+          rows: 1,
+          spacing: 0,
+          position: {
+            x: centerX,
+            y: centerY,
+            rotation: 0,
+            scale: 1,
+          },
+        },
       },
     };
-  }, [component?.id]);
+  }, [component?.id, canvasWidth, canvasHeight]);
 
   const componentChoices = useMemo(
     () => ({
