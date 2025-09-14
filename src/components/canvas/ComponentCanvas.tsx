@@ -25,10 +25,9 @@ export function ComponentCanvas({ component, variables, otherComponents }: Compo
   const canvasHeight = Math.max(300, containerHeight - 20);
   const { canvasHtmlRef, canvasRef } = useFabricCanvas(canvasWidth, canvasHeight);
 
-  const allComponents = useMemo(
-    () => [...otherComponents, component],
-    [otherComponents, component]
-  );
+  const allComponents = useMemo(() => {
+    return [...otherComponents.filter((c) => c.id !== component.id), component];
+  }, [otherComponents, component]);
 
   const thisComponent: ComponentDict = useMemo(() => {
     // Only create the component dict if we have a valid component ID

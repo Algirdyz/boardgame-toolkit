@@ -55,6 +55,7 @@ function RouteComponent() {
 
   const onComponentChange = (updatedComponent: ComponentStaticSpecs) => {
     setComponent(updatedComponent);
+    console.log('Component updated:', updatedComponent);
     // Auto-save on changes
     save.mutate(updatedComponent);
   };
