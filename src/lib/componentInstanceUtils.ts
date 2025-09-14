@@ -15,10 +15,20 @@ export interface ComponentInstance {
  */
 export function generateComponentInstances(
   baseInstanceId: string,
-  templateSpecs: ComponentTemplateSpecs,
-  componentSize: { width: number; height: number }
+  componentSize: { width: number; height: number },
+  templateSpecs?: ComponentTemplateSpecs
 ): ComponentInstance[] {
-  const { maxCount, rows, spacing, position } = templateSpecs;
+  const {
+    maxCount = 1,
+    rows = 1,
+    spacing = 0,
+    position = {
+      rotation: 0,
+      scale: 1,
+      x: 0,
+      y: 0,
+    },
+  } = templateSpecs || {};
   const instances: ComponentInstance[] = [];
 
   // Calculate how many components per row

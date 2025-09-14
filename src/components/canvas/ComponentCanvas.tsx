@@ -1,106 +1,61 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { ComponentStaticSpecs } from '@shared/components';
 import { Variables } from '@shared/variables';
-import { ActionIcon, Badge, Box, Button, Group, Stack, Text } from '@mantine/core';
+import { Badge, Box, Button, Group, Stack, Text } from '@mantine/core';
 import { useElementSize } from '@mantine/hooks';
-import { IconEye, IconEyeOff, IconRefresh } from '@tabler/icons-react';
+import { ComponentDict, useComponents } from '@/hooks/useComponents';
 import useFabricCanvas from '@/hooks/useFabricCanvas';
-import {
-  addComponentToCanvas,
-  clearCanvas,
-  ComponentRenderOptions,
-  RenderContext,
-} from '@/lib/fabricRenderer';
 
 interface ComponentCanvasProps {
   component: ComponentStaticSpecs;
   variables: Variables;
-  allComponents?: ComponentStaticSpecs[]; // For nested component rendering
+  otherComponents: ComponentStaticSpecs[];
 }
 
-export function ComponentCanvas({
-  component,
-  variables,
-  allComponents = [],
-}: ComponentCanvasProps) {
+export function ComponentCanvas({ component, variables, otherComponents }: ComponentCanvasProps) {
   const {
     ref: canvasContainerRef,
     width: containerWidth,
     height: containerHeight,
   } = useElementSize();
   const [selectedChoiceIndex, setSelectedChoiceIndex] = useState(0);
-  const [isInteractive, setIsInteractive] = useState(false);
-  const [renderError, setRenderError] = useState<string | null>(null);
 
   // Calculate canvas dimensions with some padding
   const canvasWidth = Math.max(400, containerWidth - 20);
   const canvasHeight = Math.max(300, containerHeight - 20);
   const { canvasHtmlRef, canvasRef } = useFabricCanvas(canvasWidth, canvasHeight);
 
-  // Create render context
-  const renderContext: RenderContext | null = React.useMemo(() => {
+  const allComponents = useMemo(
+    () => [...otherComponents, component],
+    [otherComponents, component]
+  );
+
+  const thisComponent: ComponentDict = useMemo(() => {
+    // Only create the component dict if we have a valid component ID
+    if (!component?.id) return {} as ComponentDict;
+
     return {
-      variables,
-      components: [component, ...allComponents],
-      scale: 1,
+      targetComponent: {
+        componentId: component.id,
+      },
     };
-  }, [variables, component, allComponents]);
+  }, [component?.id]);
 
-  // Render component on canvas
-  const renderComponent = useCallback(async () => {
-    if (!canvasRef.current || !component.id) return;
+  const componentChoices = useMemo(
+    () => ({
+      targetComponent: selectedChoiceIndex,
+    }),
+    [selectedChoiceIndex]
+  );
 
-    setRenderError(null);
-
-    try {
-      // Clear canvas first
-      clearCanvas(canvasRef.current);
-
-      // Calculate center position - ensure we have valid dimensions
-      const canvasWidth = canvasRef.current.getWidth();
-      const canvasHeight = canvasRef.current.getHeight();
-
-      // Don't render if canvas doesn't have valid dimensions yet
-      if (canvasWidth <= 0 || canvasHeight <= 0) {
-        return;
-      }
-
-      const centerX = canvasWidth / 2;
-      const centerY = canvasHeight / 2;
-
-      const renderOptions: ComponentRenderOptions = {
-        position: {
-          x: centerX,
-          y: centerY,
-          rotation: 0,
-          scale: 1,
-        },
-        choiceIndex: selectedChoiceIndex,
-        allowInteraction: isInteractive,
-      };
-
-      // Add component to canvas
-      await addComponentToCanvas(canvasRef.current, component.id, renderContext, renderOptions);
-    } catch (error) {
-      console.error('Error rendering component:', error);
-      setRenderError(error instanceof Error ? error.message : 'Unknown rendering error');
-    }
-  }, [renderContext, component.id, selectedChoiceIndex, isInteractive]);
-
-  // Re-render when dependencies change or when canvas dimensions are available
-  useEffect(() => {
-    if (renderContext && canvasWidth > 0 && canvasHeight > 0) {
-      renderComponent();
-    }
-  }, [renderComponent, renderContext, canvasWidth, canvasHeight]);
-
-  const handleRefresh = () => {
-    renderComponent();
-  };
-
-  const toggleInteractive = () => {
-    setIsInteractive(!isInteractive);
-  };
+  useComponents({
+    canvasRef,
+    allComponents,
+    variables,
+    allowInteraction: false,
+    components: thisComponent,
+    componentChoices,
+  });
 
   const handleChoiceChange = (index: number) => {
     setSelectedChoiceIndex(index);
@@ -114,8 +69,6 @@ export function ComponentCanvas({
     );
   }
 
-  const currentChoice = component.choices[selectedChoiceIndex];
-
   return (
     <Stack gap="sm" p="md" h="100%" style={{ overflow: 'hidden' }}>
       {/* Controls */}
@@ -127,26 +80,6 @@ export function ComponentCanvas({
           <Badge size="sm" variant="light">
             {component.name}
           </Badge>
-        </Group>
-
-        <Group gap="sm">
-          <ActionIcon
-            variant={isInteractive ? 'filled' : 'light'}
-            color={isInteractive ? 'blue' : 'gray'}
-            onClick={toggleInteractive}
-            title={isInteractive ? 'Disable interaction' : 'Enable interaction'}
-          >
-            {isInteractive ? <IconEye size={16} /> : <IconEyeOff size={16} />}
-          </ActionIcon>
-
-          <Button
-            size="xs"
-            variant="light"
-            leftSection={<IconRefresh size={14} />}
-            onClick={handleRefresh}
-          >
-            Refresh
-          </Button>
         </Group>
       </Group>
 
@@ -167,13 +100,6 @@ export function ComponentCanvas({
         ))}
       </Group>
 
-      {/* Error display */}
-      {renderError && (
-        <Text size="sm" c="red" p="xs" bg="red.0" style={{ borderRadius: 4, flexShrink: 0 }}>
-          Render Error: {renderError}
-        </Text>
-      )}
-
       {/* Canvas container - this should expand to fill remaining space */}
       <Box
         ref={canvasContainerRef}
@@ -191,29 +117,6 @@ export function ComponentCanvas({
       >
         <canvas ref={canvasHtmlRef} />
       </Box>
-
-      {/* Info display */}
-      <Stack gap="xs" style={{ flexShrink: 0 }}>
-        {currentChoice && (
-          <Group gap="md">
-            <Text size="sm" c="dimmed">
-              <strong>Choice:</strong> {currentChoice.name}
-            </Text>
-          </Group>
-        )}
-
-        <Group gap="md">
-          <Text size="xs" c="dimmed">
-            Canvas: {canvasWidth} x {canvasHeight}
-          </Text>
-          <Text size="xs" c="dimmed">
-            Interactive: {isInteractive ? 'Yes' : 'No'}
-          </Text>
-          <Text size="xs" c="dimmed">
-            Choices: {component.choices.length}
-          </Text>
-        </Group>
-      </Stack>
     </Stack>
   );
 }

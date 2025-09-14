@@ -38,9 +38,9 @@ export default function TileCanvas({
   // Use the reusable components hook
   useComponents({
     canvasRef,
-    components,
+    allComponents: components,
     variables,
-    templateComponents: template.components,
+    components: template.components,
     componentChoices: tile.componentChoices,
     allowInteraction: false, // Tiles are for preview only
   });

@@ -1,18 +1,24 @@
 import { useEffect, useRef } from 'react';
 import { ComponentStaticSpecs } from '@shared/components';
-import { TemplateDefinition } from '@shared/templates';
+import { ComponentRenderDefinition } from '@shared/templates';
 import { Variables } from '@shared/variables';
 import * as fabric from 'fabric';
 import { generateComponentInstances } from '@/lib/componentInstanceUtils';
 import { renderComponent, RenderContext } from '@/lib/fabricRenderer';
 
+type Optional<T, K extends keyof T> = Pick<Partial<T>, K> & Omit<T, K>;
+type OptionalComponentRenderDefinition = Optional<ComponentRenderDefinition, 'templateSpecs'>;
+export interface ComponentDict {
+  [instanceId: string]: OptionalComponentRenderDefinition;
+}
+
 interface UseComponentsOptions {
   canvasRef: React.RefObject<fabric.Canvas | null>;
   // Core data needed for rendering
-  components: ComponentStaticSpecs[]; // Available component definitions
+  allComponents: ComponentStaticSpecs[]; // Available component definitions
   variables: Variables; // Global variables (colors, shapes, etc.)
   // Template configuration
-  templateComponents: TemplateDefinition['components']; // Which components to render and where
+  components: ComponentDict; // Which components to render and where
   componentChoices?: { [instanceId: string]: number }; // Choice index per component instance
   // Rendering behavior
   allowInteraction?: boolean; // Whether components should be interactive
@@ -26,9 +32,9 @@ interface UseComponentsOptions {
  */
 export function useComponents({
   canvasRef,
-  components,
+  allComponents,
   variables,
-  templateComponents,
+  components,
   componentChoices = {},
   allowInteraction = false,
   scale,
@@ -37,7 +43,7 @@ export function useComponents({
   const canvas = canvasRef.current;
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas || !components.length) return;
+    if (!canvas || !allComponents.length) return;
 
     const renderAllComponents = async () => {
       // Remove existing component objects
@@ -48,14 +54,14 @@ export function useComponents({
 
       // Create render context from the cleaner parameters
       const renderContext: RenderContext = {
-        components,
+        components: allComponents,
         variables,
         scale,
       };
 
       // Render each component instance
-      for (const [instanceId, templateComponent] of Object.entries(templateComponents)) {
-        const component = components.find((c) => c.id === templateComponent.componentId);
+      for (const [instanceId, templateComponent] of Object.entries(components)) {
+        const component = allComponents.find((c) => c.id === templateComponent.componentId);
         if (!component) continue;
 
         // Get the choice index for this instance
@@ -65,8 +71,8 @@ export function useComponents({
         const componentSize = { width: component.width, height: component.height };
         const generatedInstances = generateComponentInstances(
           instanceId,
-          templateComponent.templateSpecs,
-          componentSize
+          componentSize,
+          templateComponent.templateSpecs
         );
 
         // Render each generated instance
@@ -102,15 +108,7 @@ export function useComponents({
     };
 
     renderAllComponents();
-  }, [
-    canvas,
-    components,
-    variables,
-    templateComponents,
-    componentChoices,
-    allowInteraction,
-    scale,
-  ]);
+  }, [canvas, allComponents, variables, components, componentChoices, allowInteraction, scale]);
 
   // Cleanup function to remove all component objects
   const cleanup = () => {

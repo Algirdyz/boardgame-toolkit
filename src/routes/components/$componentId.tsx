@@ -173,7 +173,7 @@ function RouteComponent() {
           <ComponentCanvas
             component={component}
             variables={variables.data}
-            allComponents={allComponents.data}
+            otherComponents={allComponents.data}
           />
         ) : (
           <Flex align="center" justify="center" h="100%" bg="#f8f9fa">
