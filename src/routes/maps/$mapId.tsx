@@ -1,8 +1,9 @@
-import { Center, NumberInput, Stack, Text } from '@mantine/core';
+import { CellType } from '@shared/maps';
+import { Center, Group, NumberInput, Stack, Text } from '@mantine/core';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
 import { getMap, saveMap } from '@/api/mapApi';
-import { EditorPageTemplate } from '@/components';
+import { CellTypesManager, EditorPageTemplate } from '@/components';
 import { MapCanvas } from '@/components/canvas/MapCanvas';
 
 export const Route = createFileRoute('/maps/$mapId')({
@@ -38,6 +39,16 @@ function MapEditor() {
     queryClient.setQueryData(['maps', parseInt(mapId, 10)], updatedMap);
   };
 
+  const handleCellTypesChange = (cellTypes: CellType[]) => {
+    if (map) {
+      const updatedMap = {
+        ...map,
+        cellTypes,
+      };
+      handleMapChange(updatedMap);
+    }
+  };
+
   const isLoading = mapQuery.isLoading;
 
   if (mapQuery.error) {
@@ -68,18 +79,16 @@ function MapEditor() {
               <Text size="sm">
                 <strong>Name:</strong> {map.name}
               </Text>
-              <Text size="sm">
-                <strong>Tile Shape:</strong> {map.tileShape === 'hexagon' ? 'Hexagonal' : 'Square'}
-              </Text>
-              <Text size="sm">
-                <strong>Dimensions:</strong> {map.dimensions?.width || 10} ×{' '}
-                {map.dimensions?.height || 8} cells
-              </Text>
-              <Text size="xs" c="dimmed">
-                Map editing features will be added in future updates. Currently showing a preview of
-                your map configuration.
-              </Text>
             </Stack>
+          ),
+        },
+        {
+          title: 'Cell Types',
+          content: map && (
+            <CellTypesManager
+              cellTypes={map.cellTypes || []}
+              onCellTypesChange={handleCellTypesChange}
+            />
           ),
         },
         {
@@ -89,38 +98,44 @@ function MapEditor() {
               <Text size="sm" fw={500}>
                 Map Dimensions
               </Text>
-              <NumberInput
-                label="Width (X cells)"
-                description="Number of cells horizontally"
-                value={map.dimensions.width}
-                onChange={(value) => {
-                  if (typeof value === 'number') {
-                    const updatedMap = {
-                      ...map,
-                      dimensions: { ...map.dimensions, width: value },
-                    };
-                    handleMapChange(updatedMap);
-                  }
-                }}
-                min={1}
-                max={50}
-              />
-              <NumberInput
-                label="Height (Y cells)"
-                description="Number of cells vertically"
-                value={map.dimensions.height}
-                onChange={(value) => {
-                  if (typeof value === 'number') {
-                    const updatedMap = {
-                      ...map,
-                      dimensions: { ...map.dimensions, width: map.dimensions.width, height: value },
-                    };
-                    handleMapChange(updatedMap);
-                  }
-                }}
-                min={1}
-                max={50}
-              />
+              <Group justify="space-between">
+                <NumberInput
+                  label="Width"
+                  w="45%"
+                  value={map.dimensions.width}
+                  onChange={(value) => {
+                    if (typeof value === 'number') {
+                      const updatedMap = {
+                        ...map,
+                        dimensions: { ...map.dimensions, width: value },
+                      };
+                      handleMapChange(updatedMap);
+                    }
+                  }}
+                  min={1}
+                  max={50}
+                />
+                <NumberInput
+                  label="Height"
+                  w="45%"
+                  value={map.dimensions.height}
+                  onChange={(value) => {
+                    if (typeof value === 'number') {
+                      const updatedMap = {
+                        ...map,
+                        dimensions: {
+                          ...map.dimensions,
+                          width: map.dimensions.width,
+                          height: value,
+                        },
+                      };
+                      handleMapChange(updatedMap);
+                    }
+                  }}
+                  min={1}
+                  max={50}
+                />
+              </Group>
             </Stack>
           ),
         },
