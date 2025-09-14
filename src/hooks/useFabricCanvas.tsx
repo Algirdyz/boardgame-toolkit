@@ -7,6 +7,7 @@ interface UseFabricCanvasOptions {
   showGrid?: boolean;
   gridSize?: number;
   gridColor?: string;
+  backgroundColor?: string;
 }
 
 interface UseFabricCanvasResult {

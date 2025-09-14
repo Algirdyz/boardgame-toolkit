@@ -70,44 +70,39 @@ export function ShapePreview({ shape, width = 200, height = 150 }: ShapePreviewP
       description: 'Preview stroke color',
     };
 
-    createFabricShape(shape, undefined, strokeColor)
-      .then((fabricObject) => {
-        if (fabricObject) {
-          // Scale the object to fit in the preview canvas
-          const maxWidth = width * 0.8;
-          const maxHeight = height * 0.8;
+    const fabricObject = createFabricShape(shape, undefined, strokeColor);
 
-          // Get object bounds
-          const objWidth = fabricObject.getScaledWidth();
-          const objHeight = fabricObject.getScaledHeight();
+    if (fabricObject) {
+      // Scale the object to fit in the preview canvas
+      const maxWidth = width * 0.8;
+      const maxHeight = height * 0.8;
 
-          // Calculate scale factor
-          const scale = Math.min(maxWidth / objWidth, maxHeight / objHeight, 1);
+      // Get object bounds
+      const objWidth = fabricObject.getScaledWidth();
+      const objHeight = fabricObject.getScaledHeight();
 
-          fabricObject.scale(scale);
-          fabricObject.set({
-            left: width / 2,
-            top: height / 2,
-            originX: 'center',
-            originY: 'center',
-            selectable: false,
-            evented: false,
-            fill: 'transparent', // Ensure no fill
-            stroke: '#4263eb', // Ensure visible stroke
-            strokeWidth: 2, // Ensure visible stroke width
-          });
+      // Calculate scale factor
+      const scale = Math.min(maxWidth / objWidth, maxHeight / objHeight, 1);
 
-          canvas.add(fabricObject);
-          canvas.renderAll();
-        } else {
-          // Show error placeholder if shape creation failed
-          addErrorPlaceholder(canvas, width, height);
-        }
-      })
-      .catch((error) => {
-        console.error('Error creating shape:', error);
-        addErrorPlaceholder(canvas, width, height);
+      fabricObject.scale(scale);
+      fabricObject.set({
+        left: width / 2,
+        top: height / 2,
+        originX: 'center',
+        originY: 'center',
+        selectable: false,
+        evented: false,
+        fill: 'transparent', // Ensure no fill
+        stroke: '#4263eb', // Ensure visible stroke
+        strokeWidth: 2, // Ensure visible stroke width
       });
+
+      canvas.add(fabricObject);
+      canvas.renderAll();
+    } else {
+      // Show error placeholder if shape creation failed
+      addErrorPlaceholder(canvas, width, height);
+    }
   }, [shape, width, height, canvasRef]);
 
   return (

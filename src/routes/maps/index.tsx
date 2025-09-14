@@ -45,6 +45,7 @@ function Maps() {
     const defaultMap: MapDefinition = {
       name,
       tileShape,
+      dimensions: { width: 10, height: 8 },
     };
 
     try {
