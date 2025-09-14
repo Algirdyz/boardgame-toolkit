@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { CanvasPosition, ComponentStaticSpecs } from '@shared/components';
 import { TemplateDefinition, TileShape } from '@shared/templates';
 import { Variables } from '@shared/variables';
@@ -6,6 +6,7 @@ import { useCanvasInteractions } from '@/hooks/useCanvasInteractions';
 import { useComponents } from '@/hooks/useComponents';
 import useFabricCanvas from '@/hooks/useFabricCanvas';
 import useTileShape from '@/hooks/useTileShape';
+import { centerCanvasToBox } from '@/lib/fabricRenderer/canvasUtils';
 
 interface TemplateCanvasProps {
   width: number;
@@ -21,7 +22,7 @@ export default function TemplateCanvas(props: TemplateCanvasProps) {
   const { template, onTemplateChange, width, height, editLocked, availableComponents, variables } =
     props;
 
-  const { canvasHtmlRef, canvasRef } = useFabricCanvas(width, height);
+  const { canvasHtmlRef, canvasRef, canvasDims } = useFabricCanvas(width, height);
   useCanvasInteractions({
     canvasRef,
     panEnabled: true,
@@ -84,13 +85,21 @@ export default function TemplateCanvas(props: TemplateCanvasProps) {
     [props.template, onTemplateChange]
   );
 
-  useTileShape(
+  const tileShapeResult = useTileShape(
     canvasRef.current,
     template.shape,
     editLocked,
     onShapeChange,
     bringComponentsToFront // Ensure components stay in front after shape updates
   );
+
+  // Center the canvas when bounding box is available
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || !tileShapeResult.boundingBox) return;
+
+    centerCanvasToBox(canvas, tileShapeResult.boundingBox, canvasDims.width, canvasDims.height);
+  }, [canvasRef, tileShapeResult.boundingBox, canvasDims]);
 
   return <canvas ref={canvasHtmlRef} />;
 }

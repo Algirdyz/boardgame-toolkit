@@ -3,7 +3,7 @@ import { GridPosition, TileShape } from '@shared/templates';
 import * as fabric from 'fabric';
 import { BoundingBox } from '@/components/canvas/canvasTypes';
 import { adjacentColor, fillColor, strokeColor, TILE_SIZE } from '@/lib/constants';
-import { calculateBoundingBox, panCanvasToObject } from '@/lib/fabricRenderer/canvasUtils';
+import { calculateBoundingBox } from '@/lib/fabricRenderer/canvasUtils';
 import { generatePolygonVertices } from '@/lib/polygoner';
 import { BaseTileShape, getTileShape } from '@/lib/tileSets/baseTileShape';
 
@@ -222,7 +222,6 @@ export default function useTileShape(
   const [boundingBox, setBoundingBox] = useState<BoundingBox | null>(null);
   const shapeObjectsRef = useRef<Map<string, fabric.Object>>(new Map());
   const adjacentObjectsRef = useRef<Map<string, fabric.Object>>(new Map());
-  const hasInitiallyPannedRef = useRef<boolean>(false);
 
   // Create tile shape instance from the new TileShape
   const baseTileShape = useMemo(() => {
@@ -387,14 +386,6 @@ export default function useTileShape(
         baseTileShape
       );
       canvas.add(polygon);
-
-      // Only pan to object once on initial load, but retry if canvas wasn't ready
-      if (!hasInitiallyPannedRef.current) {
-        const panSucceeded = panCanvasToObject(canvas, polygon);
-        if (panSucceeded) {
-          hasInitiallyPannedRef.current = true;
-        }
-      }
 
       shapeObjectsRef.current.set('polygon', polygon);
     }
