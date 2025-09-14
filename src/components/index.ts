@@ -5,6 +5,9 @@ export type { NavigationCard } from './NavigationGrid/NavigationGrid';
 export { GlobalNavbar } from './GlobalNavbar';
 export { SharedAppShell } from './SharedAppShell';
 
+// Canvas Components
+export { default as TileCanvas } from './canvas/TileCanvas';
+
 // Template Editor Components
 export {
   TemplateBasicInfo,

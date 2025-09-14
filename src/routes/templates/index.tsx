@@ -44,8 +44,7 @@ function Templates() {
 
     const defaultTemplate: TemplateDefinition = {
       name,
-      shape: [{ x: 0, y: 0 }],
-      tileShapeType,
+      shape: { vertices: [{ x: 0, y: 0 }], type: 'square' },
       components: {},
     };
     const savedTemplate = await save.mutateAsync(defaultTemplate);
@@ -66,7 +65,7 @@ function Templates() {
   const cards: NavigationCard[] = templates.data
     ? templates.data.map((t) => ({
         title: t.name,
-        subtitle: `${t.shape.length} shape points`,
+        subtitle: `${t.shape.vertices.length} shape points`,
         link: `/templates/${t.id}`,
         onDelete: t.id ? () => deleteTemplateMutation.mutate(t.id!) : undefined,
       }))

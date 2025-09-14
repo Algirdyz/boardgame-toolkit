@@ -3,8 +3,8 @@ import { TemplateDefinition } from '@shared/templates';
 import { Variables } from '@shared/variables';
 import { useCanvasInteractions } from '@/hooks/useCanvasInteractions';
 import useFabricCanvas from '@/hooks/useFabricCanvas';
-import useShapeGenerator from '@/hooks/useShapeGenerator';
 import { useTemplateCanvasComponents } from '@/hooks/useTemplateCanvasComponents';
+import useTileShape from '@/hooks/useTileShape';
 
 interface TemplateCanvasProps {
   width: number;
@@ -42,16 +42,15 @@ export default function TemplateCanvas(props: TemplateCanvasProps) {
   // Handle shape generation (the tile outline)
   // When editLocked=true: shape editing is disabled
   // When editLocked=false: shape editing is enabled
-  useShapeGenerator(
+  useTileShape(
     canvasRef.current,
     template.shape,
+    editLocked,
     (newShape) => {
       const updatedTemplate: TemplateDefinition = { ...props.template, shape: newShape };
       onTemplateChange(updatedTemplate);
     },
-    editLocked, // When true, disables shape editing
-    bringComponentsToFront, // Ensure components stay in front after shape updates
-    template.tileShapeType || 'square'
+    bringComponentsToFront // Ensure components stay in front after shape updates
   );
 
   return <canvas ref={canvasHtmlRef} />;

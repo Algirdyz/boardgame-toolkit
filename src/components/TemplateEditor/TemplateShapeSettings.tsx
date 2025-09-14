@@ -13,12 +13,12 @@ export function TemplateShapeSettings({
   onTemplateChange,
   disabled = false,
 }: TemplateShapeSettingsProps) {
-  const currentShapeType = template.tileShapeType || 'square';
+  const currentShapeType = template.shape.type;
 
   const handleShapeTypeChange = (shapeType: 'square' | 'hexagon') => {
     onTemplateChange({
       ...template,
-      tileShapeType: shapeType,
+      shape: { vertices: [{ x: 0, y: 0 }], type: shapeType },
     });
   };
 

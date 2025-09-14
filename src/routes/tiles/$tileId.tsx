@@ -1,7 +1,6 @@
 import { ComponentStaticSpecs } from '@shared/components';
 import { TemplateDefinition } from '@shared/templates';
 import { TileDefinition } from '@shared/tiles';
-import { Variables } from '@shared/variables';
 import { Center, Loader, Select, Stack, Text } from '@mantine/core';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
@@ -9,7 +8,7 @@ import { getComponents } from '@/api/componentApi';
 import { getTemplate } from '@/api/templateApi';
 import { getTile, saveTile } from '@/api/tileApi';
 import { getVariables } from '@/api/variablesApi';
-import { EditorPageTemplate } from '@/components';
+import { EditorPageTemplate, TileCanvas } from '@/components';
 
 export const Route = createFileRoute('/tiles/$tileId')({
   component: TileEditor,
@@ -139,29 +138,6 @@ function TileEditor() {
         },
       ]}
     />
-  );
-}
-
-interface TileCanvasProps {
-  tile: TileDefinition;
-  template: TemplateDefinition;
-  components: ComponentStaticSpecs[];
-  variables: Variables;
-  width: number;
-  height: number;
-}
-
-function TileCanvas({ tile, template, width, height }: TileCanvasProps) {
-  // TODO: Implement tile canvas with template rendering showing selected choices
-  return (
-    <div style={{ width, height, border: '1px solid #ccc', padding: 16 }}>
-      <Text>
-        Tile Canvas ({width}x{height})
-      </Text>
-      <Text size="sm">Template: {template.name}</Text>
-      <Text size="sm">Components: {Object.keys(template.components).length}</Text>
-      <Text size="xs">Component Choices: {JSON.stringify(tile.componentChoices)}</Text>
-    </div>
   );
 }
 

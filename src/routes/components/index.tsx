@@ -50,7 +50,6 @@ function Components() {
         {
           id: 1,
           name: 'Default',
-          description: '',
           fillColorId: 1,
           strokeColorId: 1,
         },

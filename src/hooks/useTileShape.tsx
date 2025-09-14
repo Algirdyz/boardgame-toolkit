@@ -1,11 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { GridPosition } from '@shared/templates';
+import { GridPosition, TileShape } from '@shared/templates';
 import * as fabric from 'fabric';
 import { adjacentColor, fillColor, strokeColor, TILE_SIZE } from '@/lib/constants';
 import { generatePolygonVertices } from '@/lib/polygoner';
 import { BaseTileShape, getTileShape } from '@/lib/tileSets/baseTileShape';
-
-type TileShapeType = 'square' | 'hexagon';
 
 interface UseShapeGeneratorResult {
   occupiedSquares: Set<string>;
@@ -227,24 +225,23 @@ function createInvisibleTriggerSquare(
   return group;
 }
 
-export default function useShapeGenerator(
+export default function useTileShape(
   canvas: fabric.Canvas | null,
-  shape: GridPosition[],
-  onShapeChange: (shape: GridPosition[]) => void,
+  tileShape: TileShape,
   editLocked: boolean = false,
-  enforceZOrder?: () => void,
-  tileShapeType: TileShapeType = 'square'
+  onShapeChange?: (shape: TileShape) => void,
+  enforceZOrder?: () => void
 ): UseShapeGeneratorResult {
   const [adjacentAreas, setAdjacentAreas] = useState<Set<string>>(new Set());
   const shapeObjectsRef = useRef<Map<string, fabric.Object>>(new Map());
   const adjacentObjectsRef = useRef<Map<string, fabric.Object>>(new Map());
   const hasInitiallyPannedRef = useRef<boolean>(false);
 
-  // Create tile shape instance
-  const tileShape = useMemo(() => {
-    const edgeCount = tileShapeType === 'hexagon' ? 6 : 4;
+  // Create tile shape instance from the new TileShape
+  const baseTileShape = useMemo(() => {
+    const edgeCount = tileShape.type === 'hexagon' ? 6 : 4;
     return getTileShape(edgeCount, TILE_SIZE);
-  }, [tileShapeType]);
+  }, [tileShape.type]);
 
   // Helper function to convert position to string key
   const positionKey = useCallback((pos: GridPosition): string => {
@@ -258,15 +255,15 @@ export default function useShapeGenerator(
   }, []);
 
   const occupiedSquares = useMemo(() => {
-    if (!shape || shape.length === 0) {
+    if (!tileShape.vertices || tileShape.vertices.length === 0) {
       return new Set<string>(['0,0']); // Default to single square at origin
     }
     const newSq = new Set<string>();
-    for (const pos of shape) {
+    for (const pos of tileShape.vertices) {
       newSq.add(positionKey(pos));
     }
     return newSq;
-  }, [shape, positionKey]);
+  }, [tileShape.vertices, positionKey]);
 
   // Update adjacent areas based on occupied squares
   const updateAdjacentAreas = useCallback(() => {
@@ -274,7 +271,7 @@ export default function useShapeGenerator(
 
     occupiedSquares.forEach((key) => {
       const pos = keyToPosition(key);
-      const adjacentPositions = tileShape.getAllAdjacentPositions(pos);
+      const adjacentPositions = baseTileShape.getAllAdjacentPositions(pos);
 
       adjacentPositions.forEach((adjPos) => {
         const adjKey = positionKey(adjPos);
@@ -290,6 +287,7 @@ export default function useShapeGenerator(
   // Add a square to the shape
   const addSquare = useCallback(
     (position: GridPosition) => {
+      if (!onShapeChange) return;
       if (editLocked) return; // Don't allow adding when edit is locked
 
       const key = positionKey(position);
@@ -302,7 +300,7 @@ export default function useShapeGenerator(
       if (occupiedSquares.size > 0) {
         const isAdjacent = Array.from(occupiedSquares).some((occupiedKey) => {
           const occupiedPos = keyToPosition(occupiedKey);
-          const adjacentPositions = tileShape.getAllAdjacentPositions(occupiedPos);
+          const adjacentPositions = baseTileShape.getAllAdjacentPositions(occupiedPos);
           return adjacentPositions.some(
             (adjPos) => adjPos.x === position.x && adjPos.y === position.y
           );
@@ -313,7 +311,10 @@ export default function useShapeGenerator(
         }
       }
 
-      onShapeChange([...Array.from(occupiedSquares).map((key) => keyToPosition(key)), position]);
+      onShapeChange({
+        ...tileShape,
+        vertices: [...Array.from(occupiedSquares).map((key) => keyToPosition(key)), position],
+      });
     },
     [editLocked, occupiedSquares, onShapeChange, positionKey, keyToPosition, tileShape]
   );
@@ -321,6 +322,7 @@ export default function useShapeGenerator(
   // Remove a square from the shape
   const removeSquare = useCallback(
     (position: GridPosition) => {
+      if (!onShapeChange) return;
       if (editLocked) return; // Don't allow removing when edit is locked
 
       const key = positionKey(position);
@@ -344,7 +346,7 @@ export default function useShapeGenerator(
         while (queue.length > 0) {
           const currentKey = queue.shift()!;
           const currentPos = keyToPosition(currentKey);
-          const adjacentPositions = tileShape.getAllAdjacentPositions(currentPos);
+          const adjacentPositions = baseTileShape.getAllAdjacentPositions(currentPos);
 
           adjacentPositions.forEach((adjPos) => {
             const adjKey = positionKey(adjPos);
@@ -359,7 +361,10 @@ export default function useShapeGenerator(
       };
 
       if (isConnected()) {
-        onShapeChange(Array.from(remainingSquares).map((key) => keyToPosition(key)));
+        onShapeChange({
+          ...tileShape,
+          vertices: Array.from(remainingSquares).map((key) => keyToPosition(key)),
+        });
       }
     },
     [editLocked, occupiedSquares, positionKey, keyToPosition, tileShape]
@@ -367,8 +372,12 @@ export default function useShapeGenerator(
 
   // Clear the entire shape
   const clearShape = useCallback(() => {
+    if (!onShapeChange) return;
     if (editLocked) return; // Don't allow clearing when edit is locked
-    onShapeChange([{ x: 0, y: 0 }]); // Reset to single square at origin
+    onShapeChange({
+      ...tileShape,
+      vertices: [{ x: 0, y: 0 }],
+    }); // Reset to single square at origin
   }, [editLocked, onShapeChange]);
 
   // Check if current shape is valid (connected)
@@ -388,7 +397,7 @@ export default function useShapeGenerator(
     if (occupiedSquares.size > 0) {
       const polygon = createPolygonalShape(
         Array.from(occupiedSquares).map((key) => keyToPosition(key)),
-        tileShape
+        baseTileShape
       );
       canvas.add(polygon);
 
@@ -411,7 +420,7 @@ export default function useShapeGenerator(
         pos,
         removeSquare,
         editLocked,
-        tileShape
+        baseTileShape
       );
       canvas.add(triggerSquare);
       shapeObjectsRef.current.set(key, triggerSquare);
@@ -421,7 +430,7 @@ export default function useShapeGenerator(
     if (!editLocked) {
       adjacentAreas.forEach((key) => {
         const pos = keyToPosition(key);
-        const square = createClickableSquare(canvas, pos, addSquare, editLocked, tileShape);
+        const square = createClickableSquare(canvas, pos, addSquare, editLocked, baseTileShape);
         canvas.add(square);
         canvas.renderAll();
         adjacentObjectsRef.current.set(key, square);
@@ -443,8 +452,8 @@ export default function useShapeGenerator(
     removeSquare,
     editLocked,
     enforceZOrder,
-    tileShapeType,
-    tileShape,
+    tileShape.type,
+    baseTileShape,
   ]);
 
   // Update adjacent areas when occupied squares change
