@@ -19,7 +19,6 @@ function Templates() {
   const [opened, { open, close }] = useDisclosure(false);
   const [name, setName] = useState('');
   const [tileShapeType, setTileShapeType] = useState<'square' | 'hexagon'>('square');
-
   const templates = useQuery({
     queryKey: ['templates'],
     queryFn: getTemplates,
@@ -42,19 +41,18 @@ function Templates() {
   const handleCreateTemplate = async () => {
     if (!name.trim()) return;
 
-    const defaultTemplate: TemplateDefinition = {
+    const templ: TemplateDefinition = {
       name,
-      shape: { vertices: [{ x: 0, y: 0 }], type: 'square' },
+      shape: { vertices: [{ x: 0, y: 0 }], type: tileShapeType },
       components: {},
     };
-    const savedTemplate = await save.mutateAsync(defaultTemplate);
+
+    const savedTemplate = await save.mutateAsync(templ);
     close();
     setName('');
     setTileShapeType('square'); // Reset to default
     navigate({ to: `/templates/${savedTemplate.id}` });
   };
-
-  if (templates.isError) return <div>Error loading templates</div>;
 
   const cards: NavigationCard[] = templates.data
     ? templates.data.map((t) => ({

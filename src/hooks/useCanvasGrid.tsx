@@ -238,7 +238,7 @@ export function useCanvasGrid(
     };
 
     // Listen for viewport changes
-    canvas.on('after:render', handleViewportChange);
+    // canvas.on('after:render', handleViewportChange);
 
     // Initial grid creation
     if (isEnabledRef.current) {

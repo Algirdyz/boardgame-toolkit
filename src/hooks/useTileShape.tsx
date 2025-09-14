@@ -98,7 +98,8 @@ function createClickableSquare(
       canvas?.renderAll();
     });
 
-    group.on('mousedown', () => {
+    group.on('mousedown', (e) => {
+      if ((e.e as any).button !== 0) return; // Only respond to left-click
       addSquare(pos);
     });
   }
@@ -106,15 +107,21 @@ function createClickableSquare(
   return group;
 }
 
-function createPolygonalShape(points: GridPosition[], tileShape: BaseTileShape) {
+function createPolygonalShape(
+  canvasRef: fabric.Canvas,
+  points: GridPosition[],
+  tileShape: BaseTileShape
+) {
   const vertices = generatePolygonVertices(points, tileShape);
   const fabricPoints = vertices.map((p) => new fabric.Point(p.x, p.y));
+  const zoom = canvasRef.getZoom() || 1;
   const polygon = new fabric.Polygon(fabricPoints, {
     fill: fillColor,
     stroke: strokeColor,
-    strokeWidth: 2,
+    strokeWidth: 2 / zoom,
     selectable: false,
     evented: false,
+    objectCaching: false,
   });
 
   // Mark as shape-related for z-index management
@@ -382,6 +389,7 @@ export default function useTileShape(
     // Create the main polygon shape
     if (occupiedSquares.size > 0) {
       const polygon = createPolygonalShape(
+        canvas,
         Array.from(occupiedSquares).map((key) => keyToPosition(key)),
         baseTileShape
       );
