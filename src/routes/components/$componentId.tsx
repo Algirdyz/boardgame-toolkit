@@ -1,14 +1,12 @@
 import { useEffect, useState } from 'react';
 import { ComponentStaticSpecs } from '@shared/components';
 import {
-  Box,
   Button,
   Flex,
   Group,
   Paper,
   Select,
   Stack,
-  Switch,
   Text,
   Textarea,
   TextInput,
@@ -19,6 +17,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
 import { getComponent, getComponents, saveComponent } from '@/api/componentApi';
 import { getVariables } from '@/api/variablesApi';
+import { EditorPageTemplate } from '@/components';
 import { ComponentCanvas } from '@/components/canvas/ComponentCanvas';
 import PendingComponent from '@/components/PendingComponent/PendingComponent';
 
@@ -32,7 +31,6 @@ export const Route = createFileRoute('/components/$componentId')({
 });
 
 function RouteComponent() {
-  const [editLocked, setEditLocked] = useState(true);
   const loadedComponent = Route.useLoaderData();
 
   const [component, setComponent] = useState<ComponentStaticSpecs>(loadedComponent);
@@ -57,14 +55,19 @@ function RouteComponent() {
 
   const onComponentChange = (updatedComponent: ComponentStaticSpecs) => {
     setComponent(updatedComponent);
+    // Auto-save on changes
     save.mutate(updatedComponent);
+  };
+
+  const handleSave = async () => {
+    // Manual save via save button
+    await save.mutateAsync(component);
   };
 
   const addChoice = () => {
     const newChoice = {
       id: Math.max(0, ...component.choices.map((c) => c.id)) + 1,
       name: `Choice ${component.choices.length + 1}`,
-      description: '',
       // Colors are now optional
     };
 
@@ -127,32 +130,70 @@ function RouteComponent() {
     </Group>
   );
 
+  // Helper function to get color value by ID
+  const getColorById = (colorId: number | undefined) => {
+    if (!colorId || !variables.data) return null;
+    return variables.data.colors.find((color) => color.id === colorId);
+  };
+
+  // Helper function to render selected color preview
+  const renderSelectedColorPreview = (colorId: number | undefined, label: string) => {
+    const selectedColor = getColorById(colorId);
+    const colorValue = selectedColor?.value || 'transparent';
+    const isTransparent = !selectedColor || colorValue === 'transparent';
+
+    return (
+      <Group gap="xs" align="center" mb={2}>
+        <Text size="xs" fw={500}>
+          {label}
+        </Text>
+        <div
+          style={{
+            width: 16,
+            height: 16,
+            backgroundColor: isTransparent ? '#f8f9fa' : colorValue,
+            border: isTransparent ? '2px dashed #ccc' : '1px solid #ccc',
+            borderRadius: 3,
+          }}
+        />
+        {selectedColor && (
+          <Text size="xs" c="dimmed">
+            {selectedColor.name}
+          </Text>
+        )}
+      </Group>
+    );
+  };
+
   return (
-    <Flex style={{ width: '100%', height: '100%', position: 'relative' }}>
-      <Box
-        style={{
-          width: '350px',
-          height: '100%',
-          flexShrink: 0,
-          overflow: 'auto',
-          borderRight: '1px solid #dee2e6',
-          backgroundColor: '#f8f9fa',
-        }}
-      >
-        <Stack gap="md" p="md">
-          <Group justify="space-between">
-            <Title order={3}>Component Editor</Title>
-            <Switch
-              label="Lock Edit"
-              checked={editLocked}
-              onChange={(event) => setEditLocked(event.currentTarget.checked)}
-            />
-          </Group>
-
-          <Paper p="md" withBorder>
+    <EditorPageTemplate
+      title="Component Editor"
+      canvasElement={(_width, _height) =>
+        variables.data && allComponents.data ? (
+          <ComponentCanvas
+            component={component}
+            variables={variables.data}
+            allComponents={allComponents.data}
+          />
+        ) : (
+          <Flex align="center" justify="center" h="100%" bg="#f8f9fa">
+            <Stack align="center" gap="md">
+              <Title order={2} c="dimmed">
+                Loading Canvas...
+              </Title>
+              <Text c="dimmed">Waiting for variables</Text>
+            </Stack>
+          </Flex>
+        )
+      }
+      onSave={handleSave}
+      isSaving={save.isPending}
+      showEditLock={false}
+      sections={[
+        {
+          title: 'Basic Information',
+          content: (
             <Stack gap="md">
-              <Title order={4}>Basic Information</Title>
-
               <TextInput
                 label="Name"
                 value={component.name}
@@ -217,22 +258,26 @@ function RouteComponent() {
                 />
               </Group>
             </Stack>
-          </Paper>
-
-          <Paper p="md" withBorder>
-            <Stack gap="md">
+          ),
+        },
+        {
+          title: 'Choices',
+          content: (
+            <Stack gap="sm">
               <Group justify="space-between">
-                <Title order={4}>Choices</Title>
+                <Text fw={500}>Component Choices</Text>
                 <Button size="xs" leftSection={<IconPlus size={14} />} onClick={addChoice}>
                   Add Choice
                 </Button>
               </Group>
 
               {component.choices.map((choice) => (
-                <Paper key={choice.id} p="sm" withBorder>
-                  <Stack gap="sm">
+                <Paper key={choice.id} p="xs" withBorder>
+                  <Stack gap="xs">
                     <Group justify="space-between">
-                      <Text fw={500}>Choice {choice.id}</Text>
+                      <Text fw={500} size="sm">
+                        Choice {choice.id}
+                      </Text>
                       <Button
                         size="xs"
                         color="red"
@@ -247,80 +292,60 @@ function RouteComponent() {
                       label="Name"
                       value={choice.name}
                       onChange={(e) => updateChoice(choice.id, { name: e.target.value })}
-                      size="sm"
+                      size="xs"
                     />
 
-                    <Textarea
-                      label="Description"
-                      value={choice.description || ''}
-                      onChange={(e) => updateChoice(choice.id, { description: e.target.value })}
-                      rows={2}
-                      size="sm"
-                    />
-
-                    <Select
-                      label="Fill Color"
-                      placeholder="No color selected"
-                      value={choice.fillColorId?.toString() || ''}
-                      data={colorOptions}
-                      renderOption={renderColorSelectOption}
-                      clearable
-                      onChange={(value) => {
-                        if (value === '' || value === null) {
-                          updateChoice(choice.id, { fillColorId: undefined });
-                        } else {
-                          updateChoice(choice.id, {
-                            fillColorId: parseInt(value, 10),
-                          });
-                        }
-                      }}
-                      size="sm"
-                    />
-
-                    <Select
-                      label="Stroke Color"
-                      placeholder="No color selected"
-                      value={choice.strokeColorId?.toString() || ''}
-                      data={colorOptions}
-                      renderOption={renderColorSelectOption}
-                      clearable
-                      onChange={(value) => {
-                        if (value === '' || value === null) {
-                          updateChoice(choice.id, { strokeColorId: undefined });
-                        } else {
-                          updateChoice(choice.id, {
-                            strokeColorId: parseInt(value, 10),
-                          });
-                        }
-                      }}
-                      size="sm"
-                    />
+                    <Group gap="xs" align="end">
+                      <div style={{ flex: 1 }}>
+                        {renderSelectedColorPreview(choice.fillColorId, 'Fill')}
+                        <Select
+                          placeholder="No fill"
+                          value={choice.fillColorId?.toString() || ''}
+                          data={colorOptions}
+                          renderOption={renderColorSelectOption}
+                          clearable
+                          onChange={(value) => {
+                            if (value === '' || value === null) {
+                              updateChoice(choice.id, { fillColorId: undefined });
+                            } else {
+                              updateChoice(choice.id, {
+                                fillColorId: parseInt(value, 10),
+                              });
+                            }
+                          }}
+                          size="xs"
+                          comboboxProps={{ dropdownPadding: 4, width: 250 }}
+                        />
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        {renderSelectedColorPreview(choice.strokeColorId, 'Stroke')}
+                        <Select
+                          placeholder="No stroke"
+                          value={choice.strokeColorId?.toString() || ''}
+                          data={colorOptions}
+                          renderOption={renderColorSelectOption}
+                          clearable
+                          onChange={(value) => {
+                            if (value === '' || value === null) {
+                              updateChoice(choice.id, { strokeColorId: undefined });
+                            } else {
+                              updateChoice(choice.id, {
+                                strokeColorId: parseInt(value, 10),
+                              });
+                            }
+                          }}
+                          size="xs"
+                          comboboxProps={{ dropdownPadding: 4, width: 250 }}
+                        />
+                      </div>
+                    </Group>
                   </Stack>
                 </Paper>
               ))}
             </Stack>
-          </Paper>
-        </Stack>
-      </Box>
-
-      <Box style={{ flex: 1, height: '100%' }}>
-        {variables.data && allComponents.data ? (
-          <ComponentCanvas
-            component={component}
-            variables={variables.data}
-            allComponents={allComponents.data}
-          />
-        ) : (
-          <Flex align="center" justify="center" h="100%" bg="#f8f9fa">
-            <Stack align="center" gap="md">
-              <Title order={2} c="dimmed">
-                Loading Canvas...
-              </Title>
-              <Text c="dimmed">Waiting for variables</Text>
-            </Stack>
-          </Flex>
-        )}
-      </Box>
-    </Flex>
+          ),
+        },
+      ]}
+    />
   );
 }

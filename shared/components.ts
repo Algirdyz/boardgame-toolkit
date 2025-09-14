@@ -8,7 +8,6 @@ export interface CanvasPosition {
 export interface ChoiceOption {
   id: number;
   name: string;
-  description?: string;
 
   fillColorId?: number;
   strokeColorId?: number;

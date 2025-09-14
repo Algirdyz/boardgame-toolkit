@@ -1,7 +1,6 @@
 import { ReactNode } from 'react';
-import { Box, Button, Flex, Group, Paper, Stack, Switch, Title } from '@mantine/core';
+import { Box, Flex, Group, Paper, Stack, Switch, Title } from '@mantine/core';
 import { useElementSize } from '@mantine/hooks';
-import { IconDeviceFloppy } from '@tabler/icons-react';
 
 interface EditorPageTemplateProps {
   // Editor configuration

@@ -59,12 +59,12 @@ export function ComponentCanvas({
       // Calculate center position - ensure we have valid dimensions
       const canvasWidth = canvasRef.current.getWidth();
       const canvasHeight = canvasRef.current.getHeight();
-      
+
       // Don't render if canvas doesn't have valid dimensions yet
       if (canvasWidth <= 0 || canvasHeight <= 0) {
         return;
       }
-      
+
       const centerX = canvasWidth / 2;
       const centerY = canvasHeight / 2;
 
@@ -199,11 +199,6 @@ export function ComponentCanvas({
             <Text size="sm" c="dimmed">
               <strong>Choice:</strong> {currentChoice.name}
             </Text>
-            {currentChoice.description && (
-              <Text size="sm" c="dimmed">
-                <strong>Description:</strong> {currentChoice.description}
-              </Text>
-            )}
           </Group>
         )}
 
