@@ -14,10 +14,12 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as VariablesIndexRouteImport } from './routes/variables/index'
 import { Route as TilesIndexRouteImport } from './routes/tiles/index'
 import { Route as TemplatesIndexRouteImport } from './routes/templates/index'
+import { Route as MapsIndexRouteImport } from './routes/maps/index'
 import { Route as ComponentsIndexRouteImport } from './routes/components/index'
 import { Route as VariablesVariableTypeRouteImport } from './routes/variables/$variableType'
 import { Route as TilesTileIdRouteImport } from './routes/tiles/$tileId'
 import { Route as TemplatesTemplateIdRouteImport } from './routes/templates/$templateId'
+import { Route as MapsMapIdRouteImport } from './routes/maps/$mapId'
 import { Route as ComponentsComponentIdRouteImport } from './routes/components/$componentId'
 
 const AboutRoute = AboutRouteImport.update({
@@ -45,6 +47,11 @@ const TemplatesIndexRoute = TemplatesIndexRouteImport.update({
   path: '/templates/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MapsIndexRoute = MapsIndexRouteImport.update({
+  id: '/maps/',
+  path: '/maps/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ComponentsIndexRoute = ComponentsIndexRouteImport.update({
   id: '/components/',
   path: '/components/',
@@ -65,6 +72,11 @@ const TemplatesTemplateIdRoute = TemplatesTemplateIdRouteImport.update({
   path: '/templates/$templateId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MapsMapIdRoute = MapsMapIdRouteImport.update({
+  id: '/maps/$mapId',
+  path: '/maps/$mapId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ComponentsComponentIdRoute = ComponentsComponentIdRouteImport.update({
   id: '/components/$componentId',
   path: '/components/$componentId',
@@ -75,10 +87,12 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/components/$componentId': typeof ComponentsComponentIdRoute
+  '/maps/$mapId': typeof MapsMapIdRoute
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
   '/tiles/$tileId': typeof TilesTileIdRoute
   '/variables/$variableType': typeof VariablesVariableTypeRoute
   '/components': typeof ComponentsIndexRoute
+  '/maps': typeof MapsIndexRoute
   '/templates': typeof TemplatesIndexRoute
   '/tiles': typeof TilesIndexRoute
   '/variables': typeof VariablesIndexRoute
@@ -87,10 +101,12 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/components/$componentId': typeof ComponentsComponentIdRoute
+  '/maps/$mapId': typeof MapsMapIdRoute
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
   '/tiles/$tileId': typeof TilesTileIdRoute
   '/variables/$variableType': typeof VariablesVariableTypeRoute
   '/components': typeof ComponentsIndexRoute
+  '/maps': typeof MapsIndexRoute
   '/templates': typeof TemplatesIndexRoute
   '/tiles': typeof TilesIndexRoute
   '/variables': typeof VariablesIndexRoute
@@ -100,10 +116,12 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/components/$componentId': typeof ComponentsComponentIdRoute
+  '/maps/$mapId': typeof MapsMapIdRoute
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
   '/tiles/$tileId': typeof TilesTileIdRoute
   '/variables/$variableType': typeof VariablesVariableTypeRoute
   '/components/': typeof ComponentsIndexRoute
+  '/maps/': typeof MapsIndexRoute
   '/templates/': typeof TemplatesIndexRoute
   '/tiles/': typeof TilesIndexRoute
   '/variables/': typeof VariablesIndexRoute
@@ -114,10 +132,12 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/components/$componentId'
+    | '/maps/$mapId'
     | '/templates/$templateId'
     | '/tiles/$tileId'
     | '/variables/$variableType'
     | '/components'
+    | '/maps'
     | '/templates'
     | '/tiles'
     | '/variables'
@@ -126,10 +146,12 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/components/$componentId'
+    | '/maps/$mapId'
     | '/templates/$templateId'
     | '/tiles/$tileId'
     | '/variables/$variableType'
     | '/components'
+    | '/maps'
     | '/templates'
     | '/tiles'
     | '/variables'
@@ -138,10 +160,12 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/components/$componentId'
+    | '/maps/$mapId'
     | '/templates/$templateId'
     | '/tiles/$tileId'
     | '/variables/$variableType'
     | '/components/'
+    | '/maps/'
     | '/templates/'
     | '/tiles/'
     | '/variables/'
@@ -151,10 +175,12 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
   ComponentsComponentIdRoute: typeof ComponentsComponentIdRoute
+  MapsMapIdRoute: typeof MapsMapIdRoute
   TemplatesTemplateIdRoute: typeof TemplatesTemplateIdRoute
   TilesTileIdRoute: typeof TilesTileIdRoute
   VariablesVariableTypeRoute: typeof VariablesVariableTypeRoute
   ComponentsIndexRoute: typeof ComponentsIndexRoute
+  MapsIndexRoute: typeof MapsIndexRoute
   TemplatesIndexRoute: typeof TemplatesIndexRoute
   TilesIndexRoute: typeof TilesIndexRoute
   VariablesIndexRoute: typeof VariablesIndexRoute
@@ -197,6 +223,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TemplatesIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/maps/': {
+      id: '/maps/'
+      path: '/maps'
+      fullPath: '/maps'
+      preLoaderRoute: typeof MapsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/components/': {
       id: '/components/'
       path: '/components'
@@ -225,6 +258,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TemplatesTemplateIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/maps/$mapId': {
+      id: '/maps/$mapId'
+      path: '/maps/$mapId'
+      fullPath: '/maps/$mapId'
+      preLoaderRoute: typeof MapsMapIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/components/$componentId': {
       id: '/components/$componentId'
       path: '/components/$componentId'
@@ -239,10 +279,12 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   ComponentsComponentIdRoute: ComponentsComponentIdRoute,
+  MapsMapIdRoute: MapsMapIdRoute,
   TemplatesTemplateIdRoute: TemplatesTemplateIdRoute,
   TilesTileIdRoute: TilesTileIdRoute,
   VariablesVariableTypeRoute: VariablesVariableTypeRoute,
   ComponentsIndexRoute: ComponentsIndexRoute,
+  MapsIndexRoute: MapsIndexRoute,
   TemplatesIndexRoute: TemplatesIndexRoute,
   TilesIndexRoute: TilesIndexRoute,
   VariablesIndexRoute: VariablesIndexRoute,

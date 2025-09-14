@@ -7,6 +7,7 @@ export { SharedAppShell } from './SharedAppShell';
 
 // Canvas Components
 export { default as TileCanvas } from './canvas/TileCanvas';
+export { MapCanvas } from './canvas/MapCanvas';
 
 // Template Editor Components
 export {

@@ -1,5 +1,6 @@
 import Fastify from 'fastify';
 import { componentRoutes } from './routes/componentRoutes';
+import mapRoutes from './routes/mapRoutes';
 import templateRoutes from './routes/templateRoutes';
 import tileRoutes from './routes/tileRoutes';
 import variableRoutes from './routes/variableRoutes';
@@ -10,6 +11,7 @@ const fastify = Fastify({
 
 fastify.register(templateRoutes);
 fastify.register(tileRoutes);
+fastify.register(mapRoutes);
 fastify.register(variableRoutes);
 fastify.register(componentRoutes);
 

@@ -6,7 +6,7 @@ import {
   IconComponents,
   IconGlobe,
   IconGrid3x3,
-  IconHome,
+  IconMap,
   IconSettings,
   IconTemplate,
 } from '@tabler/icons-react';
@@ -18,9 +18,9 @@ export function GlobalNavbar() {
       <NavLink
         w="fit-content"
         component={Link}
-        to="/"
-        label="Home"
-        leftSection={<IconHome size="1rem" stroke={1.5} />}
+        to="/maps"
+        label="Maps"
+        leftSection={<IconMap size="1rem" stroke={1.5} />}
       />
       <NavLink
         w="fit-content"
