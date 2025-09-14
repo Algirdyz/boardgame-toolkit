@@ -3,6 +3,7 @@ import { GridPosition, TileShape } from '@shared/templates';
 import * as fabric from 'fabric';
 import { BoundingBox } from '@/components/canvas/canvasTypes';
 import { adjacentColor, fillColor, strokeColor, TILE_SIZE } from '@/lib/constants';
+import { calculateBoundingBox, panCanvasToObject } from '@/lib/fabricRenderer/canvasUtils';
 import { generatePolygonVertices } from '@/lib/polygoner';
 import { BaseTileShape, getTileShape } from '@/lib/tileSets/baseTileShape';
 
@@ -119,23 +120,6 @@ function createPolygonalShape(points: GridPosition[], tileShape: BaseTileShape) 
   // Mark as shape-related for z-index management
   polygon.set('isShapeRelated', true);
   return polygon;
-}
-
-function panCanvasToObject(canvas: fabric.Canvas, object: fabric.Object): boolean {
-  // Check if canvas is properly initialized
-  if (!canvas.width || !canvas.height || canvas.width <= 0 || canvas.height <= 0) {
-    return false; // Canvas not ready
-  }
-
-  const zoom = canvas.getZoom();
-  const vpw = canvas.width / zoom;
-  const vph = canvas.height / zoom;
-  const center = object.getCenterPoint();
-  const x = center.x - vpw / 2;
-  const y = center.y - vph / 2;
-  canvas.absolutePan(new fabric.Point(x, y));
-  canvas.setZoom(zoom);
-  return true; // Successfully panned
 }
 
 function createInvisibleTriggerSquare(
@@ -383,46 +367,6 @@ export default function useTileShape(
     }); // Reset to single square at origin
   }, [editLocked, onShapeChange]);
 
-  // Update bounding box whenever shape objects change
-  const updateBoundingBox = useCallback(() => {
-    if (!canvas) {
-      setBoundingBox(null);
-      return;
-    }
-
-    const shapeObjects = Array.from(shapeObjectsRef.current.values());
-    if (shapeObjects.length === 0) {
-      setBoundingBox(null);
-      return;
-    }
-
-    let minX = Infinity,
-      minY = Infinity,
-      maxX = -Infinity,
-      maxY = -Infinity;
-
-    shapeObjects.forEach((obj) => {
-      const bounds = obj.getBoundingRect();
-      minX = Math.min(minX, bounds.left);
-      minY = Math.min(minY, bounds.top);
-      maxX = Math.max(maxX, bounds.left + bounds.width);
-      maxY = Math.max(maxY, bounds.top + bounds.height);
-    });
-
-    if (minX !== Infinity) {
-      setBoundingBox({
-        left: minX,
-        top: minY,
-        width: maxX - minX,
-        height: maxY - minY,
-        centerX: (minX + maxX) / 2,
-        centerY: (minY + maxY) / 2,
-      });
-    } else {
-      setBoundingBox(null);
-    }
-  }, [canvas]);
-
   // Check if current shape is valid (connected)
   const isShapeValid = occupiedSquares.size > 0;
 
@@ -487,8 +431,10 @@ export default function useTileShape(
       enforceZOrder();
     }
 
-    // Update bounding box after all objects are rendered
-    updateBoundingBox();
+    // Update bounding box directly after all objects are rendered
+    const shapeObjects = Array.from(shapeObjectsRef.current.values());
+    const boundingBox = calculateBoundingBox(shapeObjects);
+    setBoundingBox(boundingBox);
   }, [
     canvas,
     occupiedSquares,
@@ -498,7 +444,6 @@ export default function useTileShape(
     removeSquare,
     editLocked,
     enforceZOrder,
-    updateBoundingBox,
     tileShape.type,
     baseTileShape,
   ]);

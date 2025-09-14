@@ -6,11 +6,11 @@ import { ComponentRenderOptions, RenderContext } from './types';
 /**
  * Renders a component to a Fabric.js canvas based on its static definition
  */
-export async function renderComponent(
+export function renderComponent(
   componentId: number,
   context: RenderContext,
   options: ComponentRenderOptions = {}
-): Promise<fabric.FabricObject | null> {
+): fabric.FabricObject | null {
   const component = context.components.find((c) => c.id === componentId);
   if (!component) {
     console.warn(`Component with ID ${componentId} not found`);
@@ -37,7 +37,7 @@ export async function renderComponent(
   const strokeColor = context.variables.colors.find((c) => c.id === choice.strokeColorId);
 
   // Create the base shape
-  const fabricObject = await createFabricShape(shape, fillColor, strokeColor);
+  const fabricObject = createFabricShape(shape, fillColor, strokeColor);
   if (!fabricObject) {
     return null;
   }
@@ -86,7 +86,7 @@ export async function renderComponent(
       scale: position.scale * choice.innerComponent.position.scale,
     };
 
-    const innerObject = await renderComponent(choice.innerComponent.id, context, {
+    const innerObject = renderComponent(choice.innerComponent.id, context, {
       position: innerPosition,
       allowInteraction: options.allowInteraction,
     });

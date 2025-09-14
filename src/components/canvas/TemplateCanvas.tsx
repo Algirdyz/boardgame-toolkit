@@ -1,5 +1,6 @@
-import { ComponentStaticSpecs } from '@shared/components';
-import { TemplateDefinition } from '@shared/templates';
+import { useCallback } from 'react';
+import { CanvasPosition, ComponentStaticSpecs } from '@shared/components';
+import { TemplateDefinition, TileShape } from '@shared/templates';
 import { Variables } from '@shared/variables';
 import { useCanvasInteractions } from '@/hooks/useCanvasInteractions';
 import { useComponents } from '@/hooks/useComponents';
@@ -27,17 +28,10 @@ export default function TemplateCanvas(props: TemplateCanvasProps) {
     zoomEnabled: true,
   });
 
-  // Handle template components rendering and interaction
-  // When editLocked=true: shape editing is disabled, components can be moved
-  // When editLocked=false: shape editing is enabled, components are locked
-  const { componentGroups } = useComponents({
-    canvasRef,
-    allComponents: availableComponents,
-    variables,
-    components: template.components,
-    allowInteraction: editLocked, // When editLocked is true, components can be moved
-    onComponentPositionChange: (instanceId, position) => {
+  const onComponentPositionChange = useCallback(
+    (instanceId: string, position: CanvasPosition) => {
       // Update template when component position changes
+
       const updatedTemplate: TemplateDefinition = {
         ...template,
         components: {
@@ -53,29 +47,48 @@ export default function TemplateCanvas(props: TemplateCanvasProps) {
       };
       onTemplateChange(updatedTemplate);
     },
+    [template, onTemplateChange]
+  );
+
+  // Handle template components rendering and interaction
+  // When editLocked=true: shape editing is disabled, components can be moved
+  // When editLocked=false: shape editing is enabled, components are locked
+  const { componentGroups } = useComponents({
+    canvasRef,
+    allComponents: availableComponents,
+    variables,
+    components: template.components,
+    allowInteraction: editLocked, // When editLocked is true, components can be moved
+    onComponentPositionChange,
   });
 
   // Bring components to front function
-  const bringComponentsToFront = () => {
+  const bringComponentsToFront = useCallback(() => {
     if (!canvasRef.current) return;
 
     componentGroups.forEach((group) => {
       canvasRef.current?.bringObjectToFront(group);
     });
     canvasRef.current.renderAll();
-  };
+  }, [canvasRef, componentGroups]);
 
   // Handle shape generation (the tile outline)
   // When editLocked=true: shape editing is disabled
   // When editLocked=false: shape editing is enabled
+
+  const onShapeChange = useCallback(
+    (newShape: TileShape) => {
+      const updatedTemplate: TemplateDefinition = { ...props.template, shape: newShape };
+      onTemplateChange(updatedTemplate);
+    },
+    [props.template, onTemplateChange]
+  );
+
   useTileShape(
     canvasRef.current,
     template.shape,
     editLocked,
-    (newShape) => {
-      const updatedTemplate: TemplateDefinition = { ...props.template, shape: newShape };
-      onTemplateChange(updatedTemplate);
-    },
+    onShapeChange,
     bringComponentsToFront // Ensure components stay in front after shape updates
   );
 

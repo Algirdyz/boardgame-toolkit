@@ -7,6 +7,7 @@ import { useCanvasInteractions } from '@/hooks/useCanvasInteractions';
 import { useComponents } from '@/hooks/useComponents';
 import useFabricCanvas from '@/hooks/useFabricCanvas';
 import useTileShape from '@/hooks/useTileShape';
+import { centerCanvasToBox } from '@/lib/fabricRenderer/canvasUtils';
 
 interface TileCanvasProps {
   tile: TileDefinition;
@@ -46,28 +47,12 @@ export default function TileCanvas({
     allowInteraction: false, // Tiles are for preview only
   });
 
-  // Center the canvas when bounding boxes are available
+  // Center the canvas when bounding box is available
   useEffect(() => {
     const canvas = canvasRef.current;
-    console.log('tileShapeResult.boundingBox', tileShapeResult.boundingBox, canvas);
-    if (!canvas) return;
-    if (!tileShapeResult.boundingBox) return;
+    if (!canvas || !tileShapeResult.boundingBox) return;
 
-    //Center on shape center
-    const shapeCenterX = tileShapeResult.boundingBox.centerX;
-    const shapeCenterY = tileShapeResult.boundingBox.centerY;
-
-    const canvasCenterX = canvasDims.width / 2;
-    const canvasCenterY = canvasDims.height / 2;
-
-    // Calculate viewport transform to center the content
-    const viewportTransform = canvas.viewportTransform;
-    if (viewportTransform) {
-      viewportTransform[4] = canvasCenterX - shapeCenterX;
-      viewportTransform[5] = canvasCenterY - shapeCenterY;
-      canvas.setViewportTransform(viewportTransform);
-      canvas.renderAll();
-    }
+    centerCanvasToBox(canvas, tileShapeResult.boundingBox, canvasDims.width, canvasDims.height);
   }, [canvasRef, tileShapeResult.boundingBox, canvasDims]);
 
   return <canvas ref={canvasHtmlRef} />;

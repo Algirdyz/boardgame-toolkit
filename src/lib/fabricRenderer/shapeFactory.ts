@@ -5,33 +5,37 @@ import { isValidSimpleShape, SimpleShapeType } from './simpleShapeTypes';
 /**
  * Creates a Fabric.js object from a shape definition
  */
-export async function createFabricShape(
+export function createFabricShape(
   shape: VariableShape,
   fillColor?: VariableColor,
   strokeColor?: VariableColor
-): Promise<fabric.FabricObject | null> {
+): fabric.FabricObject | null {
   const fill = fillColor?.value || 'transparent';
   const stroke = strokeColor?.value || '#000000';
   const strokeWidth = strokeColor ? 2 : 0;
-
-  switch (shape.type) {
-    case 'simple-shape':
-      if (!isValidSimpleShape(shape.value)) {
-        console.warn(`Invalid simple shape: ${shape.value}`);
-        return null;
-      }
-      return createSimpleShape(shape.value, fill, stroke, strokeWidth);
-
-    case 'svg':
-      return createSvgShape(shape.value, fill, stroke, strokeWidth);
-
-    case 'image':
-      return createImageShape(shape.value);
-
-    default:
-      console.warn(`Unknown shape type: ${shape.type}`);
-      return null;
+  if (!isValidSimpleShape(shape.value)) {
+    console.warn(`Invalid simple shape: ${shape.value}`);
+    return null;
   }
+  return createSimpleShape(shape.value, fill, stroke, strokeWidth);
+  // switch (shape.type) {
+  //   case 'simple-shape':
+  //     if (!isValidSimpleShape(shape.value)) {
+  //       console.warn(`Invalid simple shape: ${shape.value}`);
+  //       return null;
+  //     }
+  //     return createSimpleShape(shape.value, fill, stroke, strokeWidth);
+
+  //   case 'svg':
+  //   // return createSvgShape(shape.value, fill, stroke, strokeWidth);
+
+  //   case 'image':
+  //   // return createImageShape(shape.value);
+
+  //   default:
+  //     console.warn(`Unknown shape type: ${shape.type}`);
+  //     return null;
+  // }
 }
 
 /**
