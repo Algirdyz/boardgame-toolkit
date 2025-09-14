@@ -1,8 +1,9 @@
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ComponentStaticSpecs } from '@shared/components';
 import { ComponentRenderDefinition } from '@shared/templates';
 import { Variables } from '@shared/variables';
 import * as fabric from 'fabric';
+import { BoundingBox } from '@/components/canvas/canvasTypes';
 import { generateComponentInstances } from '@/lib/componentInstanceUtils';
 import { renderComponent, RenderContext } from '@/lib/fabricRenderer';
 
@@ -46,7 +47,49 @@ export function useComponents({
   onComponentPositionChange,
 }: UseComponentsOptions) {
   const componentGroupsRef = useRef<Map<string, fabric.Group>>(new Map());
+  const [boundingBox, setBoundingBox] = useState<BoundingBox | null>(null);
   const canvas = canvasRef.current;
+
+  // Update bounding box whenever component groups change
+  const updateBoundingBox = useCallback(() => {
+    if (!canvas) {
+      setBoundingBox(null);
+      return;
+    }
+
+    const groups = Array.from(componentGroupsRef.current.values());
+    if (groups.length === 0) {
+      setBoundingBox(null);
+      return;
+    }
+
+    let minX = Infinity,
+      minY = Infinity,
+      maxX = -Infinity,
+      maxY = -Infinity;
+
+    groups.forEach((group) => {
+      const bounds = group.getBoundingRect();
+      minX = Math.min(minX, bounds.left);
+      minY = Math.min(minY, bounds.top);
+      maxX = Math.max(maxX, bounds.left + bounds.width);
+      maxY = Math.max(maxY, bounds.top + bounds.height);
+    });
+
+    if (minX !== Infinity) {
+      setBoundingBox({
+        left: minX,
+        top: minY,
+        width: maxX - minX,
+        height: maxY - minY,
+        centerX: (minX + maxX) / 2,
+        centerY: (minY + maxY) / 2,
+      });
+    } else {
+      setBoundingBox(null);
+    }
+  }, [canvas]);
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || !allComponents.length) return;
@@ -151,6 +194,9 @@ export function useComponents({
       }
 
       canvas.renderAll();
+
+      // Update bounding box after all components are rendered
+      updateBoundingBox();
     };
 
     renderAllComponents();
@@ -177,5 +223,6 @@ export function useComponents({
   return {
     cleanup,
     componentGroups: componentGroupsRef.current,
+    boundingBox,
   };
 }

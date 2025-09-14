@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { GridPosition, TileShape } from '@shared/templates';
 import * as fabric from 'fabric';
+import { BoundingBox } from '@/components/canvas/canvasTypes';
 import { adjacentColor, fillColor, strokeColor, TILE_SIZE } from '@/lib/constants';
 import { generatePolygonVertices } from '@/lib/polygoner';
 import { BaseTileShape, getTileShape } from '@/lib/tileSets/baseTileShape';
@@ -12,6 +13,7 @@ interface UseShapeGeneratorResult {
   removeSquare: (position: GridPosition) => void;
   clearShape: () => void;
   isShapeValid: boolean;
+  boundingBox: BoundingBox | null;
 }
 
 function createClickableSquare(
@@ -233,6 +235,7 @@ export default function useTileShape(
   enforceZOrder?: () => void
 ): UseShapeGeneratorResult {
   const [adjacentAreas, setAdjacentAreas] = useState<Set<string>>(new Set());
+  const [boundingBox, setBoundingBox] = useState<BoundingBox | null>(null);
   const shapeObjectsRef = useRef<Map<string, fabric.Object>>(new Map());
   const adjacentObjectsRef = useRef<Map<string, fabric.Object>>(new Map());
   const hasInitiallyPannedRef = useRef<boolean>(false);
@@ -380,6 +383,46 @@ export default function useTileShape(
     }); // Reset to single square at origin
   }, [editLocked, onShapeChange]);
 
+  // Update bounding box whenever shape objects change
+  const updateBoundingBox = useCallback(() => {
+    if (!canvas) {
+      setBoundingBox(null);
+      return;
+    }
+
+    const shapeObjects = Array.from(shapeObjectsRef.current.values());
+    if (shapeObjects.length === 0) {
+      setBoundingBox(null);
+      return;
+    }
+
+    let minX = Infinity,
+      minY = Infinity,
+      maxX = -Infinity,
+      maxY = -Infinity;
+
+    shapeObjects.forEach((obj) => {
+      const bounds = obj.getBoundingRect();
+      minX = Math.min(minX, bounds.left);
+      minY = Math.min(minY, bounds.top);
+      maxX = Math.max(maxX, bounds.left + bounds.width);
+      maxY = Math.max(maxY, bounds.top + bounds.height);
+    });
+
+    if (minX !== Infinity) {
+      setBoundingBox({
+        left: minX,
+        top: minY,
+        width: maxX - minX,
+        height: maxY - minY,
+        centerX: (minX + maxX) / 2,
+        centerY: (minY + maxY) / 2,
+      });
+    } else {
+      setBoundingBox(null);
+    }
+  }, [canvas]);
+
   // Check if current shape is valid (connected)
   const isShapeValid = occupiedSquares.size > 0;
 
@@ -443,6 +486,9 @@ export default function useTileShape(
     if (enforceZOrder) {
       enforceZOrder();
     }
+
+    // Update bounding box after all objects are rendered
+    updateBoundingBox();
   }, [
     canvas,
     occupiedSquares,
@@ -452,6 +498,7 @@ export default function useTileShape(
     removeSquare,
     editLocked,
     enforceZOrder,
+    updateBoundingBox,
     tileShape.type,
     baseTileShape,
   ]);
@@ -478,5 +525,6 @@ export default function useTileShape(
     removeSquare,
     clearShape,
     isShapeValid,
+    boundingBox,
   };
 }

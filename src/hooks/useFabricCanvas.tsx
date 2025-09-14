@@ -1,14 +1,16 @@
-import { RefObject, useEffect, useRef } from 'react';
+import { RefObject, useEffect, useRef, useState } from 'react';
 import * as fabric from 'fabric';
 
 interface UseFabricCanvasResult {
   canvasHtmlRef: RefObject<HTMLCanvasElement | null>;
   canvasRef: RefObject<fabric.Canvas | null>;
+  canvasDims: { width: number; height: number };
 }
 
 const useFabricCanvas = (width: number, height: number): UseFabricCanvasResult => {
   const canvasHtmlRef = useRef<HTMLCanvasElement>(null);
   const canvasRef = useRef<fabric.Canvas | null>(null);
+  const [canvasDims, setCanvasDims] = useState({ width, height });
 
   useEffect(() => {
     const canvasEl = canvasHtmlRef.current;
@@ -34,12 +36,13 @@ const useFabricCanvas = (width: number, height: number): UseFabricCanvasResult =
     const canvas = canvasRef.current;
     if (canvas) {
       canvas.setDimensions({ width, height });
+      setCanvasDims({ width, height });
 
       canvas.renderAll();
     }
   }, [width, height]);
 
-  return { canvasHtmlRef, canvasRef };
+  return { canvasHtmlRef, canvasRef, canvasDims };
 };
 
 export default useFabricCanvas;

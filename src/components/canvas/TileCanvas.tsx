@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { ComponentStaticSpecs } from '@shared/components';
 import { TemplateDefinition } from '@shared/templates';
 import { TileDefinition } from '@shared/tiles';
@@ -24,16 +25,16 @@ export default function TileCanvas({
   width,
   height,
 }: TileCanvasProps) {
-  const { canvasHtmlRef, canvasRef } = useFabricCanvas(width, height);
+  const { canvasHtmlRef, canvasRef, canvasDims } = useFabricCanvas(width, height);
 
-  // Enable pan and zoom for better navigation
+  // Disable interactions for tile preview
   useCanvasInteractions({
     canvasRef,
-    panEnabled: true,
-    zoomEnabled: true,
+    panEnabled: false,
+    zoomEnabled: false,
   });
 
-  useTileShape(canvasRef.current, template.shape, true);
+  const tileShapeResult = useTileShape(canvasRef.current, template.shape, true);
 
   // Use the reusable components hook
   useComponents({
@@ -44,6 +45,30 @@ export default function TileCanvas({
     componentChoices: tile.componentChoices,
     allowInteraction: false, // Tiles are for preview only
   });
+
+  // Center the canvas when bounding boxes are available
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    console.log('tileShapeResult.boundingBox', tileShapeResult.boundingBox, canvas);
+    if (!canvas) return;
+    if (!tileShapeResult.boundingBox) return;
+
+    //Center on shape center
+    const shapeCenterX = tileShapeResult.boundingBox.centerX;
+    const shapeCenterY = tileShapeResult.boundingBox.centerY;
+
+    const canvasCenterX = canvasDims.width / 2;
+    const canvasCenterY = canvasDims.height / 2;
+
+    // Calculate viewport transform to center the content
+    const viewportTransform = canvas.viewportTransform;
+    if (viewportTransform) {
+      viewportTransform[4] = canvasCenterX - shapeCenterX;
+      viewportTransform[5] = canvasCenterY - shapeCenterY;
+      canvas.setViewportTransform(viewportTransform);
+      canvas.renderAll();
+    }
+  }, [canvasRef, tileShapeResult.boundingBox, canvasDims]);
 
   return <canvas ref={canvasHtmlRef} />;
 }
