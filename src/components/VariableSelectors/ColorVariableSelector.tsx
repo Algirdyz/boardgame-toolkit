@@ -1,6 +1,5 @@
 import { forwardRef } from 'react';
-import { VariableColor } from '@shared/variables';
-import { ColorSwatch, Group, Select, Stack, Text } from '@mantine/core';
+import { Group, Select, Text } from '@mantine/core';
 import { useQuery } from '@tanstack/react-query';
 import { getVariables } from '@/api/variablesApi';
 
@@ -13,27 +12,34 @@ interface ColorVariableSelectorProps {
   clearable?: boolean;
   searchable?: boolean;
   error?: string;
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  showPreview?: boolean;
 }
 
-// Component for rendering color option in dropdown
-const ColorOption = ({ color }: { color: VariableColor }) => (
-  <Group gap="sm" wrap="nowrap">
-    <ColorSwatch color={color.value} size={24} />
-    <Stack gap={0} style={{ flex: 1 }}>
-      <Text size="sm" fw={500}>
-        {color.name}
+interface ColorOption {
+  value: string;
+  label: string;
+  color: string;
+}
+
+// Compact component for rendering color option in dropdown
+const CompactColorOption = ({ option }: { option: ColorOption }) => (
+  <Group gap="sm">
+    <div
+      style={{
+        width: 16,
+        height: 16,
+        backgroundColor: option.color === 'transparent' ? '#f8f9fa' : option.color,
+        border: option.color === 'transparent' ? '2px dashed #ccc' : '1px solid #ccc',
+        borderRadius: 3,
+      }}
+    />
+    <Text size="sm">{option.label}</Text>
+    {option.color !== 'transparent' && (
+      <Text size="xs" c="dimmed">
+        ({option.color})
       </Text>
-      <Group gap="xs">
-        <Text size="xs" c="dimmed">
-          {color.value.toUpperCase()}
-        </Text>
-        {color.description && (
-          <Text size="xs" c="dimmed">
-            • {color.description}
-          </Text>
-        )}
-      </Group>
-    </Stack>
+    )}
   </Group>
 );
 
@@ -46,8 +52,10 @@ export const ColorVariableSelector = forwardRef<HTMLInputElement, ColorVariableS
       placeholder,
       description,
       clearable = true,
-      searchable = true,
+      searchable = false,
       error,
+      size = 'sm',
+      showPreview = true,
       ...props
     },
     ref
@@ -59,51 +67,86 @@ export const ColorVariableSelector = forwardRef<HTMLInputElement, ColorVariableS
 
     const colors = variables?.colors || [];
 
-    // Convert colors to select options with visual info
-    const options = colors.map((color) => ({
-      value: color.id?.toString() || '',
-      label: color.name,
-      color,
-    }));
+    // Convert colors to compact select options
+    const colorOptions: ColorOption[] = [
+      { value: '', label: 'No Color', color: 'transparent' },
+      ...colors.map((color) => ({
+        value: color.id?.toString() || '',
+        label: color.name,
+        color: color.value,
+      })),
+    ];
 
     const handleChange = (selectedValue: string | null) => {
       if (onChange) {
-        onChange(selectedValue ? parseInt(selectedValue, 10) : null);
+        onChange(selectedValue && selectedValue !== '' ? parseInt(selectedValue, 10) : null);
       }
     };
 
     // Find selected color for display
     const selectedColor = colors.find((c) => c.id === value);
 
+    // Helper function to render selected color preview
+    const renderSelectedColorPreview = () => {
+      if (!showPreview) return null;
+      
+      const colorValue = selectedColor?.value || 'transparent';
+      const isTransparent = !selectedColor || colorValue === 'transparent';
+
+      return (
+        <Group gap="xs" align="center" mb={2}>
+          {label && (
+            <Text size="xs" fw={500}>
+              {label}
+            </Text>
+          )}
+          <div
+            style={{
+              width: 16,
+              height: 16,
+              backgroundColor: isTransparent ? '#f8f9fa' : colorValue,
+              border: isTransparent ? '2px dashed #ccc' : '1px solid #ccc',
+              borderRadius: 3,
+            }}
+          />
+          {selectedColor && (
+            <Text size="xs" c="dimmed">
+              {selectedColor.name}
+            </Text>
+          )}
+        </Group>
+      );
+    };
+
     return (
-      <Select
-        ref={ref}
-        label={label}
-        placeholder={placeholder || (isLoading ? 'Loading colors...' : 'Select a color')}
-        description={description}
-        error={error}
-        data={options}
-        value={value?.toString() || null}
-        onChange={handleChange}
-        disabled={isLoading}
-        searchable={searchable}
-        clearable={clearable}
-        leftSection={selectedColor && <ColorSwatch color={selectedColor.value} size={16} />}
-        renderOption={({ option }) => {
-          const color = colors.find((c) => c.id?.toString() === option.value);
-          return color ? <ColorOption color={color} /> : option.label;
-        }}
-        comboboxProps={{
-          dropdownPadding: 8,
-          shadow: 'md',
-        }}
-        styles={{
-          option: {
-            padding: '8px 12px',
-          },
-        }}
-        {...props}
-      />
+      <div>
+        {showPreview && renderSelectedColorPreview()}
+        <Select
+          ref={ref}
+          label={!showPreview ? label : undefined}
+          placeholder={placeholder || (isLoading ? 'Loading colors...' : 'Select a color')}
+          description={description}
+          error={error}
+          data={colorOptions}
+          value={value?.toString() || ''}
+          onChange={handleChange}
+          disabled={isLoading}
+          searchable={searchable}
+          clearable={clearable}
+          size={size}
+          renderOption={({ option }) => {
+            const colorOption = colorOptions.find((c) => c.value === option.value);
+            return colorOption ? <CompactColorOption option={colorOption} /> : option.label;
+          }}
+          comboboxProps={{
+            dropdownPadding: 4,
+            width: 250,
+          }}
+          {...props}
+        />
+      </div>
     );
   }
 );
+
+ColorVariableSelector.displayName = 'ColorVariableSelector';

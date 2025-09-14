@@ -8,6 +8,7 @@ import { getComponent, getComponents, saveComponent } from '@/api/componentApi';
 import { getVariables } from '@/api/variablesApi';
 import { EditorPageTemplate } from '@/components';
 import { ComponentCanvas } from '@/components/canvas/ComponentCanvas';
+import { ColorVariableSelector } from '@/components/VariableSelectors/ColorVariableSelector';
 import PendingComponent from '@/components/PendingComponent/PendingComponent';
 
 export const Route = createFileRoute('/components/$componentId')({
@@ -82,77 +83,12 @@ function RouteComponent() {
     });
   };
 
-  // Color and shape options for dropdowns
-  const colorOptions = [
-    { value: '', label: 'No Color', color: 'transparent' },
-    ...(variables.data?.colors.map((color) => ({
-      value: color.id!.toString(),
-      label: color.name,
-      color: color.value,
-    })) || []),
-  ];
-
+  // Shape options for dropdowns
   const shapeOptions =
     variables.data?.shapes.map((shape) => ({
       value: shape.id!.toString(),
       label: `${shape.name} (${shape.type})`,
     })) || [];
-
-  // Custom render function for color options
-  const renderColorSelectOption = ({ option }: { option: any }) => (
-    <Group gap="sm">
-      <div
-        style={{
-          width: 16,
-          height: 16,
-          backgroundColor: option.color === 'transparent' ? '#f8f9fa' : option.color,
-          border: option.color === 'transparent' ? '2px dashed #ccc' : '1px solid #ccc',
-          borderRadius: 3,
-        }}
-      />
-      <Text size="sm">{option.label}</Text>
-      {option.color !== 'transparent' && (
-        <Text size="xs" c="dimmed">
-          ({option.color})
-        </Text>
-      )}
-    </Group>
-  );
-
-  // Helper function to get color value by ID
-  const getColorById = (colorId: number | undefined) => {
-    if (!colorId || !variables.data) return null;
-    return variables.data.colors.find((color) => color.id === colorId);
-  };
-
-  // Helper function to render selected color preview
-  const renderSelectedColorPreview = (colorId: number | undefined, label: string) => {
-    const selectedColor = getColorById(colorId);
-    const colorValue = selectedColor?.value || 'transparent';
-    const isTransparent = !selectedColor || colorValue === 'transparent';
-
-    return (
-      <Group gap="xs" align="center" mb={2}>
-        <Text size="xs" fw={500}>
-          {label}
-        </Text>
-        <div
-          style={{
-            width: 16,
-            height: 16,
-            backgroundColor: isTransparent ? '#f8f9fa' : colorValue,
-            border: isTransparent ? '2px dashed #ccc' : '1px solid #ccc',
-            borderRadius: 3,
-          }}
-        />
-        {selectedColor && (
-          <Text size="xs" c="dimmed">
-            {selectedColor.name}
-          </Text>
-        )}
-      </Group>
-    );
-  };
 
   return (
     <EditorPageTemplate
@@ -276,45 +212,23 @@ function RouteComponent() {
 
                     <Group gap="xs" align="end">
                       <div style={{ flex: 1 }}>
-                        {renderSelectedColorPreview(choice.fillColorId, 'Fill')}
-                        <Select
-                          placeholder="No fill"
-                          value={choice.fillColorId?.toString() || ''}
-                          data={colorOptions}
-                          renderOption={renderColorSelectOption}
-                          clearable
-                          onChange={(value) => {
-                            if (value === '' || value === null) {
-                              updateChoice(choice.id, { fillColorId: undefined });
-                            } else {
-                              updateChoice(choice.id, {
-                                fillColorId: parseInt(value, 10),
-                              });
-                            }
-                          }}
+                        <ColorVariableSelector
+                          label="Fill"
+                          value={choice.fillColorId || null}
+                          onChange={(value) => updateChoice(choice.id, { fillColorId: value || undefined })}
                           size="xs"
-                          comboboxProps={{ dropdownPadding: 4, width: 250 }}
+                          clearable
+                          placeholder="No fill"
                         />
                       </div>
                       <div style={{ flex: 1 }}>
-                        {renderSelectedColorPreview(choice.strokeColorId, 'Stroke')}
-                        <Select
-                          placeholder="No stroke"
-                          value={choice.strokeColorId?.toString() || ''}
-                          data={colorOptions}
-                          renderOption={renderColorSelectOption}
-                          clearable
-                          onChange={(value) => {
-                            if (value === '' || value === null) {
-                              updateChoice(choice.id, { strokeColorId: undefined });
-                            } else {
-                              updateChoice(choice.id, {
-                                strokeColorId: parseInt(value, 10),
-                              });
-                            }
-                          }}
+                        <ColorVariableSelector
+                          label="Stroke"
+                          value={choice.strokeColorId || null}
+                          onChange={(value) => updateChoice(choice.id, { strokeColorId: value || undefined })}
                           size="xs"
-                          comboboxProps={{ dropdownPadding: 4, width: 250 }}
+                          clearable
+                          placeholder="No stroke"
                         />
                       </div>
                     </Group>
