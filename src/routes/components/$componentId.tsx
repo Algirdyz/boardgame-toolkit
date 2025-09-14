@@ -8,8 +8,8 @@ import { getComponent, getComponents, saveComponent } from '@/api/componentApi';
 import { getVariables } from '@/api/variablesApi';
 import { EditorPageTemplate } from '@/components';
 import { ComponentCanvas } from '@/components/canvas/ComponentCanvas';
-import { ColorVariableSelector } from '@/components/VariableSelectors/ColorVariableSelector';
 import PendingComponent from '@/components/PendingComponent/PendingComponent';
+import { ColorVariableSelector } from '@/components/VariableSelectors/ColorVariableSelector';
 
 export const Route = createFileRoute('/components/$componentId')({
   component: RouteComponent,
@@ -215,7 +215,9 @@ function RouteComponent() {
                         <ColorVariableSelector
                           label="Fill"
                           value={choice.fillColorId || null}
-                          onChange={(value) => updateChoice(choice.id, { fillColorId: value || undefined })}
+                          onChange={(value) =>
+                            updateChoice(choice.id, { fillColorId: value || undefined })
+                          }
                           size="xs"
                           clearable
                           placeholder="No fill"
@@ -225,7 +227,9 @@ function RouteComponent() {
                         <ColorVariableSelector
                           label="Stroke"
                           value={choice.strokeColorId || null}
-                          onChange={(value) => updateChoice(choice.id, { strokeColorId: value || undefined })}
+                          onChange={(value) =>
+                            updateChoice(choice.id, { strokeColorId: value || undefined })
+                          }
                           size="xs"
                           clearable
                           placeholder="No stroke"

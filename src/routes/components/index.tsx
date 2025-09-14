@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { ComponentStaticSpecs } from '@shared/components';
-import { Center, Loader } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
@@ -61,14 +60,6 @@ function Components() {
     navigate({ to: `/components/${savedComponent.id}` });
   };
 
-  if (components.isLoading)
-    return (
-      <Center>
-        <Loader />
-      </Center>
-    );
-  if (components.isError) return <div>Error loading components</div>;
-
   const cards: NavigationCard[] = components.data
     ? components.data.map((c) => ({
         title: c.name,
@@ -81,11 +72,13 @@ function Components() {
   return (
     <OverviewPageTemplate
       title="Components"
-      description="Define reusable variables for colors, shapes, dimensions, and names that can be used throughout your project."
+      description="Create and manage reusable game components with customizable properties and variables."
       cards={cards}
       columns={3}
+      loading={components.isLoading}
+      isError={components.isError}
       modalTitle="New Component"
-      modalPlaceholder="Enter component name (e.g., Worker Slot, Resource Icon)"
+      modalPlaceholder="Enter component name (e.g., Resource Token, Worker Meeple)"
       createButtonText="Create New Component"
       opened={opened}
       onClose={close}
@@ -93,7 +86,7 @@ function Components() {
       name={name}
       onNameChange={setName}
       onSubmit={handleCreateComponent}
-      isLoading={save.isPending}
+      createPending={save.isPending}
     />
   );
 }

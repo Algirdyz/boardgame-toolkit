@@ -89,7 +89,7 @@ export const ColorVariableSelector = forwardRef<HTMLInputElement, ColorVariableS
     // Helper function to render selected color preview
     const renderSelectedColorPreview = () => {
       if (!showPreview) return null;
-      
+
       const colorValue = selectedColor?.value || 'transparent';
       const isTransparent = !selectedColor || colorValue === 'transparent';
 

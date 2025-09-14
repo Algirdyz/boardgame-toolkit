@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { TileDefinition } from '@shared/tiles';
-import { Center, Loader, Select, Stack, Text } from '@mantine/core';
+import { Select, Stack, Text } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
@@ -87,14 +87,6 @@ function Tiles() {
     }
   };
 
-  if (tiles.isLoading || templates.isLoading) {
-    return (
-      <Center h="100vh">
-        <Loader size="lg" />
-      </Center>
-    );
-  }
-
   const cards: NavigationCard[] = (tiles.data || []).map((tile) => ({
     id: tile.id!,
     title: tile.name,
@@ -115,6 +107,8 @@ function Tiles() {
       description="Create and manage tile instances from templates"
       cards={cards}
       columns={3}
+      loading={tiles.isLoading || templates.isLoading}
+      isError={tiles.isError || templates.isError}
       modalTitle="New Tile"
       modalPlaceholder="Enter tile name (e.g., Forest Card, Castle Token)"
       createButtonText="Create New Tile"
@@ -124,7 +118,7 @@ function Tiles() {
       name={name}
       onNameChange={setName}
       onSubmit={handleCreateTile}
-      isLoading={save.isPending}
+      createPending={save.isPending}
       additionalModalContent={
         <Stack gap="sm">
           <Text size="sm" fw={500}>

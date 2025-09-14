@@ -38,7 +38,11 @@ export default function NavigationGrid(props: { cards: NavigationCard[]; columns
 
           <Card.Section component={Link} to={item.link} style={{ textDecoration: 'none' }}>
             <AspectRatio ratio={1920 / 1080}>
-              <Image src="https://placehold.co/600x400?text=Placeholder" radius="md" />
+              <Image
+                src="https://placehold.co/600x400?text=Placeholder"
+                radius="md"
+                style={{ height: 200, objectFit: 'cover' }}
+              />
             </AspectRatio>
           </Card.Section>
 

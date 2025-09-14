@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { TemplateDefinition } from '@shared/templates';
-import { Center, Loader, Stack, Text } from '@mantine/core';
+import { Stack, Text } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
@@ -54,12 +54,6 @@ function Templates() {
     navigate({ to: `/templates/${savedTemplate.id}` });
   };
 
-  if (templates.isLoading)
-    return (
-      <Center>
-        <Loader />
-      </Center>
-    );
   if (templates.isError) return <div>Error loading templates</div>;
 
   const cards: NavigationCard[] = templates.data
@@ -77,6 +71,8 @@ function Templates() {
       description="Create and manage game board templates with customizable shapes, worker slots, and resource layouts."
       cards={cards}
       columns={3}
+      loading={templates.isLoading}
+      isError={templates.isError}
       modalTitle="New Template"
       modalPlaceholder="Enter template name (e.g., Card Template, Token Layout)"
       createButtonText="Create New Template"
@@ -86,7 +82,7 @@ function Templates() {
       name={name}
       onNameChange={setName}
       onSubmit={handleCreateTemplate}
-      isLoading={save.isPending}
+      createPending={save.isPending}
       additionalModalContent={
         <Stack gap="sm">
           <Text size="sm" fw={500}>

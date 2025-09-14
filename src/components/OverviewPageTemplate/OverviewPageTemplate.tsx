@@ -1,5 +1,16 @@
 import { ReactNode } from 'react';
-import { Button, Container, Group, Modal, Stack, Text, TextInput, Title } from '@mantine/core';
+import {
+  Button,
+  Center,
+  Container,
+  Group,
+  Loader,
+  Modal,
+  Stack,
+  Text,
+  TextInput,
+  Title,
+} from '@mantine/core';
 import { IconPlus } from '@tabler/icons-react';
 import NavigationGrid, { NavigationCard } from '../NavigationGrid/NavigationGrid';
 
@@ -9,6 +20,8 @@ interface OverviewPageTemplateProps {
   description: string;
   cards: NavigationCard[];
   columns?: number;
+  loading?: boolean;
+  isError?: boolean;
 
   // Modal configuration
   modalTitle: string;
@@ -24,7 +37,7 @@ interface OverviewPageTemplateProps {
   name: string;
   onNameChange: (name: string) => void;
   onSubmit: () => void;
-  isLoading?: boolean;
+  createPending?: boolean;
 
   // Optional additional modal content
   additionalModalContent?: ReactNode;
@@ -35,6 +48,8 @@ export function OverviewPageTemplate({
   description,
   cards,
   columns = 3,
+  loading = false,
+  isError = false,
   modalTitle,
   modalPlaceholder,
   createButtonText,
@@ -44,7 +59,7 @@ export function OverviewPageTemplate({
   name,
   onNameChange,
   onSubmit,
-  isLoading = false,
+  createPending = false,
   additionalModalContent,
 }: OverviewPageTemplateProps) {
   const handleKeyDown = (event: React.KeyboardEvent) => {
@@ -52,6 +67,29 @@ export function OverviewPageTemplate({
       onSubmit();
     }
   };
+
+  if (loading) {
+    return (
+      <Container size="lg" py="xl">
+        <Stack gap="xl">
+          <Group justify="space-between" align="center">
+            <div>
+              <Title order={1}>{title}</Title>
+              <Text c="dimmed" mt="xs">
+                {description}
+              </Text>
+            </div>
+            <Button disabled leftSection={<IconPlus />}>
+              {createButtonText}
+            </Button>
+          </Group>
+          <Center py="xl">
+            <Loader />
+          </Center>
+        </Stack>
+      </Container>
+    );
+  }
 
   return (
     <Container size="lg" py="xl">
@@ -73,7 +111,7 @@ export function OverviewPageTemplate({
             <Button variant="light" onClick={onClose}>
               Cancel
             </Button>
-            <Button onClick={onSubmit} disabled={!name.trim()} loading={isLoading}>
+            <Button onClick={onSubmit} disabled={!name.trim()} loading={createPending}>
               Create
             </Button>
           </Group>
@@ -92,7 +130,17 @@ export function OverviewPageTemplate({
           </Button>
         </Group>
 
-        <NavigationGrid cards={cards} columns={columns} />
+        {isError && (
+          <Text c="red" size="sm">
+            There was an error loading data.
+          </Text>
+        )}
+        {loading && (
+          <Center py="xl">
+            <Loader />
+          </Center>
+        )}
+        {!loading && !isError && <NavigationGrid cards={cards} columns={columns} />}
       </Stack>
     </Container>
   );

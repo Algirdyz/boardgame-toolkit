@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { MapDefinition } from '@shared/maps';
-import { Center, Loader, Stack, Text } from '@mantine/core';
+import { Stack, Text } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
@@ -73,14 +73,6 @@ function Maps() {
     }
   };
 
-  if (maps.isLoading) {
-    return (
-      <Center h="100vh">
-        <Loader size="lg" />
-      </Center>
-    );
-  }
-
   const cards: NavigationCard[] = (maps.data || []).map((map) => ({
     id: map.id!,
     title: map.name,
@@ -96,6 +88,8 @@ function Maps() {
       description="Create and manage game maps with different tile shapes and layouts"
       cards={cards}
       columns={3}
+      loading={maps.isLoading}
+      isError={maps.isError}
       modalTitle="New Map"
       modalPlaceholder="Enter map name (e.g., Dungeon Level 1, World Map)"
       createButtonText="Create New Map"
@@ -105,7 +99,7 @@ function Maps() {
       name={name}
       onNameChange={setName}
       onSubmit={handleCreateMap}
-      isLoading={save.isPending}
+      createPending={save.isPending}
       additionalModalContent={
         <Stack gap="sm">
           <Text size="sm" fw={500}>
