@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ComponentTemplateSpecs } from '@shared/components';
 import { TemplateDefinition } from '@shared/templates';
-import { Center, Loader } from '@mantine/core';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
 import { getComponents } from '@/api/componentApi';
@@ -47,14 +46,6 @@ function RouteComponent() {
   });
 
   // Simple loading state
-  if (components.isLoading || variables.isLoading) {
-    return (
-      <Center style={{ height: '100vh' }}>
-        <Loader size="xl" />
-      </Center>
-    );
-  }
-
   const onTemplateChange = (updatedTemplate: TemplateDefinition) => {
     // This is the source of truth for the editor's current state.
     setTemplate(updatedTemplate);
@@ -145,6 +136,7 @@ function RouteComponent() {
   return (
     <EditorPageTemplate
       title="Template Editor"
+      loading={components.isLoading || variables.isLoading}
       canvasElement={(width, height) => (
         <TemplateCanvas
           template={template}

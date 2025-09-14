@@ -1,17 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ComponentStaticSpecs } from '@shared/components';
-import {
-  Button,
-  Flex,
-  Group,
-  Paper,
-  Select,
-  Stack,
-  Text,
-  Textarea,
-  TextInput,
-  Title,
-} from '@mantine/core';
+import { Button, Group, Paper, Select, Stack, Text, Textarea, TextInput } from '@mantine/core';
 import { IconPlus, IconTrash } from '@tabler/icons-react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
@@ -168,24 +157,14 @@ function RouteComponent() {
   return (
     <EditorPageTemplate
       title="Component Editor"
-      canvasElement={(_width, _height) =>
-        variables.data && allComponents.data ? (
-          <ComponentCanvas
-            component={component}
-            variables={variables.data}
-            otherComponents={allComponents.data}
-          />
-        ) : (
-          <Flex align="center" justify="center" h="100%" bg="#f8f9fa">
-            <Stack align="center" gap="md">
-              <Title order={2} c="dimmed">
-                Loading Canvas...
-              </Title>
-              <Text c="dimmed">Waiting for variables</Text>
-            </Stack>
-          </Flex>
-        )
-      }
+      loading={variables.isLoading || allComponents.isLoading}
+      canvasElement={(_width, _height) => (
+        <ComponentCanvas
+          component={component}
+          variables={variables.data!}
+          otherComponents={allComponents.data!}
+        />
+      )}
       onSave={handleSave}
       isSaving={save.isPending}
       showEditLock={false}

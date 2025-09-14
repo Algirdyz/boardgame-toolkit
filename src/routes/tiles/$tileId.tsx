@@ -1,7 +1,7 @@
 import { ComponentStaticSpecs } from '@shared/components';
 import { TemplateDefinition } from '@shared/templates';
 import { TileDefinition } from '@shared/tiles';
-import { Center, Loader, Select, Stack, Text } from '@mantine/core';
+import { Center, Select, Stack, Text } from '@mantine/core';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
 import { getComponents } from '@/api/componentApi';
@@ -57,18 +57,11 @@ function TileEditor() {
     }
   };
 
-  if (
+  const isLoading =
     tileQuery.isLoading ||
     templateQuery.isLoading ||
     componentsQuery.isLoading ||
-    variablesQuery.isLoading
-  ) {
-    return (
-      <Center h="100vh">
-        <Loader size="lg" />
-      </Center>
-    );
-  }
+    variablesQuery.isLoading;
 
   if (tileQuery.error || templateQuery.error) {
     return (
@@ -86,6 +79,7 @@ function TileEditor() {
   return (
     <EditorPageTemplate
       title={`Editing: ${tile.name}`}
+      loading={isLoading}
       canvasElement={(width, height) => (
         <TileCanvas
           tile={tile}

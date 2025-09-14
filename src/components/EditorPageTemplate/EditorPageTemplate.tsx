@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { Box, Flex, Group, Paper, Stack, Switch, Title } from '@mantine/core';
+import { Box, Center, Flex, Group, Loader, Paper, Stack, Switch, Title } from '@mantine/core';
 import { useElementSize } from '@mantine/hooks';
 
 interface EditorPageTemplateProps {
@@ -8,6 +8,9 @@ interface EditorPageTemplateProps {
 
   // Canvas/main content area - function that receives width and height
   canvasElement: (width: number, height: number) => ReactNode;
+
+  // Loading state
+  loading?: boolean;
 
   // Save functionality
   onSave: () => void;
@@ -32,8 +35,9 @@ interface EditorPageTemplateProps {
 export function EditorPageTemplate({
   title,
   canvasElement,
-  onSave,
-  isSaving = false,
+  loading = false,
+  onSave: _onSave,
+  isSaving: _isSaving = false,
   editLocked = false,
   onEditLockChange,
   editLockLabel = 'Lock Edit',
@@ -58,7 +62,7 @@ export function EditorPageTemplate({
         <Stack gap="md" p="md">
           <Group justify="space-between">
             <Title order={3}>{title}</Title>
-            {showEditLock && onEditLockChange && (
+            {showEditLock && onEditLockChange && !loading && (
               <Switch
                 label={editLockLabel}
                 checked={editLocked}
@@ -67,19 +71,33 @@ export function EditorPageTemplate({
             )}
           </Group>
 
-          {sections.map((section, index) => (
-            <Paper key={index} p="md" withBorder>
-              <Stack gap="md">
-                <Title order={4}>{section.title}</Title>
-                {section.content}
-              </Stack>
+          {loading ? (
+            <Paper p="md" withBorder>
+              <Center>
+                <Loader />
+              </Center>
             </Paper>
-          ))}
+          ) : (
+            sections.map((section, index) => (
+              <Paper key={index} p="md" withBorder>
+                <Stack gap="md">
+                  <Title order={4}>{section.title}</Title>
+                  {section.content}
+                </Stack>
+              </Paper>
+            ))
+          )}
         </Stack>
       </Box>
 
-      <Box ref={ref} style={{ flex: 1, height: '100%', overflow: 'hidden' }}>
-        {canvasElement(width, height)}
+      <Box ref={ref} style={{ flex: 1, height: '100%', overflow: 'hidden', minHeight: '400px' }}>
+        {loading ? (
+          <Center style={{ width: '100%', height: '100%' }}>
+            <Loader size="xl" />
+          </Center>
+        ) : width > 0 && height > 0 ? (
+          canvasElement(width, height)
+        ) : null}
       </Box>
     </Flex>
   );
