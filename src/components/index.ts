@@ -8,9 +8,18 @@ export { SharedAppShell } from './SharedAppShell';
 // Canvas Components
 export { default as TileCanvas } from './canvas/TileCanvas';
 export { MapCanvas } from './canvas/MapCanvas';
+export { CellTypePalette } from './canvas/CellTypePalette';
 
 // Map Components
 export { CellTypesManager } from './CellTypesManager';
+
+// Variable Selectors
+export {
+  ColorVariableSelector,
+  ShapeVariableSelector,
+  DimensionVariableSelector,
+  NameVariableSelector,
+} from './VariableSelectors';
 
 // Template Editor Components
 export {

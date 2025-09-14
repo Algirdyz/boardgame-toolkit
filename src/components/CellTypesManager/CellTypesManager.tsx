@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import { CellType } from '@shared/maps';
-import { ActionIcon, Button, Card, Group, Select, Stack, Text, TextInput } from '@mantine/core';
+import { ActionIcon, Button, Card, Group, Stack, Text, TextInput } from '@mantine/core';
 import { IconPlus, IconTrash } from '@tabler/icons-react';
-import { useQuery } from '@tanstack/react-query';
-import { getVariables } from '@/api/variablesApi';
+import { ColorVariableSelector, ShapeVariableSelector } from '@/components';
 
 // Simple UUID generator for client-side use
 const generateId = () => Math.random().toString(36).substr(2, 9);
@@ -15,28 +14,6 @@ interface CellTypesManagerProps {
 
 export function CellTypesManager({ cellTypes, onCellTypesChange }: CellTypesManagerProps) {
   const [newCellTypeName, setNewCellTypeName] = useState('');
-
-  // Fetch variables for color and shape options
-  const variablesQuery = useQuery({
-    queryKey: ['variables'],
-    queryFn: getVariables,
-  });
-
-  const variables = variablesQuery.data;
-
-  // Prepare color options for Select component
-  const colorOptions =
-    variables?.colors.map((color) => ({
-      value: color.id?.toString() || '',
-      label: `${color.name} (${color.value})`,
-    })) || [];
-
-  // Prepare shape options for Select component
-  const shapeOptions =
-    variables?.shapes.map((shape) => ({
-      value: shape.id?.toString() || '',
-      label: `${shape.name} (${shape.type})`,
-    })) || [];
 
   const handleAddCellType = () => {
     if (!newCellTypeName.trim()) return;
@@ -57,10 +34,6 @@ export function CellTypesManager({ cellTypes, onCellTypesChange }: CellTypesMana
   const handleUpdateCellType = (cellTypeId: string, updates: Partial<CellType>) => {
     onCellTypesChange(cellTypes.map((ct) => (ct.id === cellTypeId ? { ...ct, ...updates } : ct)));
   };
-
-  if (variablesQuery.isLoading) {
-    return <Text size="sm">Loading variables...</Text>;
-  }
 
   return (
     <Stack gap="md">
@@ -120,27 +93,25 @@ export function CellTypesManager({ cellTypes, onCellTypesChange }: CellTypesMana
                   </ActionIcon>
                 </Group>
 
-                <Select
+                <ColorVariableSelector
                   label="Color"
                   placeholder="Select a color variable"
-                  data={colorOptions}
-                  value={cellType.colorId?.toString() || null}
+                  value={cellType.colorId || null}
                   onChange={(value) =>
                     handleUpdateCellType(cellType.id, {
-                      colorId: value ? parseInt(value, 10) : undefined,
+                      colorId: value || undefined,
                     })
                   }
                   clearable
                 />
 
-                <Select
+                <ShapeVariableSelector
                   label="Shape"
                   placeholder="Select a shape variable"
-                  data={shapeOptions}
-                  value={cellType.shapeId?.toString() || null}
+                  value={cellType.shapeId || null}
                   onChange={(value) =>
                     handleUpdateCellType(cellType.id, {
-                      shapeId: value ? parseInt(value, 10) : undefined,
+                      shapeId: value || undefined,
                     })
                   }
                   clearable

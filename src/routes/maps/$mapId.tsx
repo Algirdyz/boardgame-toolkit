@@ -39,13 +39,20 @@ function MapEditor() {
     queryClient.setQueryData(['maps', parseInt(mapId, 10)], updatedMap);
   };
 
-  const handleCellTypesChange = (cellTypes: CellType[]) => {
+  const handleCellTypesChange = async (cellTypes: CellType[]) => {
     if (map) {
       const updatedMap = {
         ...map,
         cellTypes,
       };
       handleMapChange(updatedMap);
+
+      // Auto-save when cell types change
+      try {
+        await saveMutation.mutateAsync(updatedMap);
+      } catch (error) {
+        console.error('Failed to save cell types:', error);
+      }
     }
   };
 

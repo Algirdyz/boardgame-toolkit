@@ -93,8 +93,8 @@ export function TemplateComponentsManager({
         const componentSize = { width: component.width, height: component.height };
         const instances = generateComponentInstances(
           instanceId,
-          instance.templateSpecs,
-          componentSize
+          componentSize,
+          instance.templateSpecs
         );
         const componentsPerRow = Math.ceil(
           instance.templateSpecs.maxCount / instance.templateSpecs.rows

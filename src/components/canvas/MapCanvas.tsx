@@ -1,6 +1,7 @@
-import { useEffect, useRef } from 'react';
-import { MapDefinition } from '@shared/maps';
+import { useEffect, useRef, useState } from 'react';
+import { CellType, MapDefinition } from '@shared/maps';
 import * as fabric from 'fabric';
+import { CellTypePalette } from './CellTypePalette';
 import { useCanvasInteractions } from '@/hooks/useCanvasInteractions';
 import useFabricCanvas from '@/hooks/useFabricCanvas';
 import { TILE_SIZE } from '@/lib/constants';
@@ -30,6 +31,9 @@ interface MapCanvasProps {
 export function MapCanvas({ map, width, height }: MapCanvasProps) {
   // Store tile coordinates for future use
   const tileCoordinatesRef = useRef<TileCoord[]>([]);
+
+  // Active cell type for painting
+  const [activeCellType, setActiveCellType] = useState<CellType | null>(null);
 
   const { canvasHtmlRef, canvasRef } = useFabricCanvas(width, height, {
     showGrid: false,
@@ -128,5 +132,32 @@ export function MapCanvas({ map, width, height }: MapCanvasProps) {
     canvas.renderAll();
   }, [canvasRef, map.dimensions.width, map.dimensions.height]);
 
-  return <canvas ref={canvasHtmlRef} />;
+  return (
+    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+      {/* Cell Type Palette - positioned outside canvas but overlaying */}
+      {(map.cellTypes?.length || 0) > 0 && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 20,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 1000,
+            pointerEvents: 'auto',
+          }}
+        >
+          <CellTypePalette
+            cellTypes={map.cellTypes || []}
+            activeCellType={activeCellType}
+            onCellTypeSelect={setActiveCellType}
+          />
+        </div>
+      )}
+
+      {/* Canvas container */}
+      <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+        <canvas ref={canvasHtmlRef} style={{ display: 'block' }} />
+      </div>
+    </div>
+  );
 }
