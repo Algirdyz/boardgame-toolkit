@@ -5,6 +5,12 @@ export interface CellType {
   shapeId?: number; // reference to VariableShape
 }
 
+export interface MapCell {
+  x: number;
+  y: number;
+  cellTypeId?: string; // reference to CellType.id
+}
+
 export interface MapDefinition {
   id?: number;
   name: string;
@@ -14,4 +20,5 @@ export interface MapDefinition {
     height: number; // number of cells in Y direction
   };
   cellTypes?: CellType[]; // available cell types for this map
+  cells?: MapCell[]; // individual cell data
 }

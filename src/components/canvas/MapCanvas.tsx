@@ -1,7 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
-import { CellType, MapDefinition } from '@shared/maps';
+import { CellType, MapCell, MapDefinition } from '@shared/maps';
+import { useQuery } from '@tanstack/react-query';
 import * as fabric from 'fabric';
 import { CellTypePalette } from './CellTypePalette';
+import {
+  createGridLine,
+  createInteractiveCell,
+  setupCellHoverEffects,
+  updateCellVisual,
+  type TileCoord,
+} from './mapCanvasUtils';
+import { getVariables } from '@/api/variablesApi';
 import { useCanvasInteractions } from '@/hooks/useCanvasInteractions';
 import useFabricCanvas from '@/hooks/useFabricCanvas';
 import { TILE_SIZE } from '@/lib/constants';
@@ -9,7 +18,6 @@ import { getTileShape } from '@/lib/tileSets/baseTileShape';
 
 type Vertex = { x: number; y: number };
 type Edge = { from: Vertex; to: Vertex };
-type TileCoord = { x: number; y: number };
 
 // Helper function to create a unique key for vertices
 const vertexKey = (vertex: Vertex): string => `${vertex.x},${vertex.y}`;
@@ -28,12 +36,26 @@ interface MapCanvasProps {
   onMapChange?: (map: MapDefinition) => void;
 }
 
-export function MapCanvas({ map, width, height }: MapCanvasProps) {
+export function MapCanvas({ map, width, height, onMapChange }: MapCanvasProps) {
   // Store tile coordinates for future use
   const tileCoordinatesRef = useRef<TileCoord[]>([]);
 
+  // Store interactive cell objects for cleanup - keyed by "x,y"
+  const interactiveCellsRef = useRef<Map<string, fabric.Group>>(new Map());
+
+  // Store grid lines separately
+  const gridLinesRef = useRef<fabric.Line[]>([]);
+
   // Active cell type for painting
   const [activeCellType, setActiveCellType] = useState<CellType | null>(null);
+
+  // Load variables for color rendering
+  const { data: variables } = useQuery({
+    queryKey: ['variables'],
+    queryFn: getVariables,
+  });
+
+  const colors = variables?.colors || [];
 
   const { canvasHtmlRef, canvasRef } = useFabricCanvas(width, height, {
     showGrid: false,
@@ -41,17 +63,93 @@ export function MapCanvas({ map, width, height }: MapCanvasProps) {
     gridColor: '#e0e0e0',
   });
 
+  // Define all the functions as consts
+  const getCellByCoord = (x: number, y: number): MapCell | undefined => {
+    return map.cells?.find((cell) => cell.x === x && cell.y === y);
+  };
+
+  const getCellTypeColor = (cellType: CellType): string => {
+    if (!cellType.colorId) return '#e9ecef';
+    const color = colors.find((c) => c.id === cellType.colorId);
+    return color?.value || '#e9ecef';
+  };
+
+  const getCellTypeById = (id: string): CellType | undefined => {
+    return map.cellTypes?.find((ct) => ct.id === id);
+  };
+
+  const getActiveCellType = (): CellType | null => {
+    return activeCellType;
+  };
+
+  const handleCellClick = (x: number, y: number) => {
+    if (!onMapChange) return;
+
+    const cells = map.cells || [];
+    const existingCellIndex = cells.findIndex((cell) => cell.x === x && cell.y === y);
+
+    let updatedCells;
+    if (activeCellType) {
+      // Add or update cell with new type
+      const newCell: MapCell = { x, y, cellTypeId: activeCellType.id };
+      if (existingCellIndex >= 0) {
+        updatedCells = [...cells];
+        updatedCells[existingCellIndex] = newCell;
+      } else {
+        updatedCells = [...cells, newCell];
+      }
+    } else if (existingCellIndex >= 0) {
+      // Remove cell (erase mode)
+      updatedCells = cells.filter((_, index) => index !== existingCellIndex);
+    } else {
+      // No cell to remove, no change needed
+      return;
+    }
+
+    const updatedMap = {
+      ...map,
+      cells: updatedCells,
+    };
+
+    onMapChange(updatedMap);
+  };
+
+  // Create a refs object to hold all the functions that need to stay current
+  const functionsRef = useRef({
+    getCellByCoord,
+    getCellTypeColor,
+    getCellTypeById,
+    getActiveCellType,
+    handleCellClick,
+  });
+
+  // Update the functions ref whenever dependencies change
+  useEffect(() => {
+    functionsRef.current = {
+      getCellByCoord,
+      getCellTypeColor,
+      getCellTypeById,
+      getActiveCellType,
+      handleCellClick,
+    };
+  }, [getCellByCoord, getCellTypeColor, getCellTypeById, getActiveCellType, handleCellClick]);
+
   useCanvasInteractions({
     canvasRef,
     panEnabled: true,
     zoomEnabled: true,
   });
+
+  // Effect 1: Create grid and interactive cells (only when dimensions change)
   useEffect(() => {
+    console.log('MapCanvas: Rebuilding grid and interactive cells due to dimension change');
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    // Clear canvas
+    // Clear canvas and references
     canvas.clear();
+    interactiveCellsRef.current.clear();
+    gridLinesRef.current = [];
 
     // Only handle square tiles for now
     if (map.tileShape !== 'square') {
@@ -87,7 +185,7 @@ export function MapCanvas({ map, width, height }: MapCanvasProps) {
     // Store tile coordinates in ref for future use
     tileCoordinatesRef.current = tileCoords;
 
-    // Collect all unique vertices
+    // Collect all unique vertices and edges for grid lines
     const verticesMap = new Map<string, Vertex>();
     const edgesMap = new Map<string, Edge>();
 
@@ -119,18 +217,58 @@ export function MapCanvas({ map, width, height }: MapCanvasProps) {
       }
     });
 
-    // Draw all unique edges as individual lines
+    // Draw all unique edges as grid lines
     edgesMap.forEach((edge) => {
-      const line = new fabric.Line([edge.from.x, edge.from.y, edge.to.x, edge.to.y], {
-        stroke: '#ccc',
-        strokeWidth: 1,
-        selectable: false,
-      });
+      const line = createGridLine(edge.from.x, edge.from.y, edge.to.x, edge.to.y);
       canvas.add(line);
+      gridLinesRef.current.push(line);
+    });
+
+    // Create interactive cells
+    tileCoords.forEach((tileCoord) => {
+      const cellKey = `${tileCoord.x},${tileCoord.y}`;
+      const interactiveCell = createInteractiveCell(tileCoord, squareTileShape, startX, startY);
+
+      // Store reference for updates
+      interactiveCellsRef.current.set(cellKey, interactiveCell);
+
+      // Set up hover effects using the utils function to avoid closure issues
+      setupCellHoverEffects(interactiveCell, canvas, functionsRef);
+
+      canvas.add(interactiveCell);
     });
 
     canvas.renderAll();
-  }, [canvasRef, map.dimensions.width, map.dimensions.height]);
+  }, [canvasRef, map.dimensions.width, map.dimensions.height, map.tileShape]);
+
+  // Effect 2: Update cell visuals when cell data or cell types change
+  useEffect(() => {
+    console.log('MapCanvas: Updating cell visuals due to map.cells or map.cellTypes change');
+    const canvas = canvasRef.current;
+    if (!canvas || interactiveCellsRef.current.size === 0) return;
+
+    // Update visual state of all cells based on current map data
+    tileCoordinatesRef.current.forEach((tileCoord) => {
+      const cellKey = `${tileCoord.x},${tileCoord.y}`;
+      const interactiveCell = interactiveCellsRef.current.get(cellKey);
+      const currentCell = functionsRef.current.getCellByCoord(tileCoord.x, tileCoord.y);
+
+      if (interactiveCell) {
+        if (currentCell) {
+          const cellType = map.cellTypes?.find((ct) => ct.id === currentCell.cellTypeId);
+          updateCellVisual(
+            interactiveCell,
+            cellType || null,
+            functionsRef.current.getCellTypeColor
+          );
+        } else {
+          updateCellVisual(interactiveCell, null, functionsRef.current.getCellTypeColor);
+        }
+      }
+    });
+
+    canvas.renderAll();
+  }, [map.cells, map.cellTypes, colors]);
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
