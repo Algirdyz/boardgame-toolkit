@@ -2,8 +2,8 @@ import { ComponentStaticSpecs } from '@shared/components';
 import { TemplateDefinition } from '@shared/templates';
 import { Variables } from '@shared/variables';
 import { useCanvasInteractions } from '@/hooks/useCanvasInteractions';
+import { useComponents } from '@/hooks/useComponents';
 import useFabricCanvas from '@/hooks/useFabricCanvas';
-import { useTemplateCanvasComponents } from '@/hooks/useTemplateCanvasComponents';
 import useTileShape from '@/hooks/useTileShape';
 
 interface TemplateCanvasProps {
@@ -30,14 +30,40 @@ export default function TemplateCanvas(props: TemplateCanvasProps) {
   // Handle template components rendering and interaction
   // When editLocked=true: shape editing is disabled, components can be moved
   // When editLocked=false: shape editing is enabled, components are locked
-  const { bringComponentsToFront } = useTemplateCanvasComponents({
-    canvas: canvasRef.current,
-    template,
-    onTemplateChange,
-    shapeLocked: editLocked, // When editLocked is true, shape editing is locked, so components can be moved
-    availableComponents,
+  const { componentGroups } = useComponents({
+    canvasRef,
+    allComponents: availableComponents,
     variables,
+    components: template.components,
+    allowInteraction: editLocked, // When editLocked is true, components can be moved
+    onComponentPositionChange: (instanceId, position) => {
+      // Update template when component position changes
+      const updatedTemplate: TemplateDefinition = {
+        ...template,
+        components: {
+          ...template.components,
+          [instanceId]: {
+            ...template.components[instanceId],
+            templateSpecs: {
+              ...template.components[instanceId].templateSpecs,
+              position,
+            },
+          },
+        },
+      };
+      onTemplateChange(updatedTemplate);
+    },
   });
+
+  // Bring components to front function
+  const bringComponentsToFront = () => {
+    if (!canvasRef.current) return;
+
+    componentGroups.forEach((group) => {
+      canvasRef.current?.bringObjectToFront(group);
+    });
+    canvasRef.current.renderAll();
+  };
 
   // Handle shape generation (the tile outline)
   // When editLocked=true: shape editing is disabled

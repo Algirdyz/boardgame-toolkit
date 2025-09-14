@@ -23,6 +23,11 @@ interface UseComponentsOptions {
   // Rendering behavior
   allowInteraction?: boolean; // Whether components should be interactive
   scale?: number; // Optional scaling factor
+  // Update callbacks
+  onComponentPositionChange?: (
+    instanceId: string,
+    position: { x: number; y: number; rotation: number; scale: number }
+  ) => void;
 }
 
 /**
@@ -38,19 +43,20 @@ export function useComponents({
   componentChoices = {},
   allowInteraction = false,
   scale,
+  onComponentPositionChange,
 }: UseComponentsOptions) {
-  const componentObjectsRef = useRef<Map<string, fabric.FabricObject>>(new Map());
+  const componentGroupsRef = useRef<Map<string, fabric.Group>>(new Map());
   const canvas = canvasRef.current;
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || !allComponents.length) return;
 
     const renderAllComponents = async () => {
-      // Remove existing component objects
-      componentObjectsRef.current.forEach((obj) => {
-        canvas.remove(obj);
+      // Remove existing component groups
+      componentGroupsRef.current.forEach((group) => {
+        canvas.remove(group);
       });
-      componentObjectsRef.current.clear();
+      componentGroupsRef.current.clear();
 
       // Create render context from the cleaner parameters
       const renderContext: RenderContext = {
@@ -59,7 +65,7 @@ export function useComponents({
         scale,
       };
 
-      // Render each component instance
+      // Render each component instance as a group
       for (const [instanceId, templateComponent] of Object.entries(components)) {
         const component = allComponents.find((c) => c.id === templateComponent.componentId);
         if (!component) continue;
@@ -75,7 +81,9 @@ export function useComponents({
           templateComponent.templateSpecs
         );
 
-        // Render each generated instance
+        // Create fabric objects for each generated instance
+        const fabricObjects: fabric.Object[] = [];
+
         for (const genInstance of generatedInstances) {
           try {
             const fabricObject = await renderComponent(
@@ -84,43 +92,90 @@ export function useComponents({
               {
                 position: genInstance.position,
                 choiceIndex,
-                allowInteraction,
+                allowInteraction: false, // Individual objects in group should not be interactive
               }
             );
 
             if (fabricObject) {
-              // Add metadata to identify this object
-              fabricObject.set('componentInstanceId', instanceId);
-              fabricObject.set('generatedInstanceId', genInstance.id);
-              fabricObject.set('componentId', templateComponent.componentId);
-              fabricObject.set('choiceIndex', choiceIndex);
-
-              canvas.add(fabricObject);
-              componentObjectsRef.current.set(genInstance.id, fabricObject);
+              fabricObjects.push(fabricObject);
             }
           } catch (error) {
             console.error(`Failed to render component ${templateComponent.componentId}:`, error);
           }
         }
+
+        if (fabricObjects.length === 0) continue;
+
+        // Get position from templateSpecs or use default
+        const groupPosition = templateComponent.templateSpecs?.position || {
+          x: 0,
+          y: 0,
+          rotation: 0,
+          scale: 1,
+        };
+
+        // Create a group for all instances of this component
+        const group = new fabric.Group(fabricObjects, {
+          left: groupPosition.x,
+          top: groupPosition.y,
+          scaleX: groupPosition.scale,
+          scaleY: groupPosition.scale,
+          angle: groupPosition.rotation,
+          selectable: allowInteraction,
+          evented: allowInteraction,
+          lockScalingX: true,
+          lockScalingY: true,
+          lockRotation: true,
+        });
+
+        // Store instance ID as custom property for identification
+        (group as any).instanceId = instanceId;
+
+        // Handle group movement - call update callback if provided
+        if (allowInteraction && onComponentPositionChange) {
+          group.on('modified', () => {
+            const newPosition = {
+              x: group.left || 0,
+              y: group.top || 0,
+              scale: group.scaleX || 1,
+              rotation: group.angle || 0,
+            };
+
+            onComponentPositionChange(instanceId, newPosition);
+          });
+        }
+
+        // Add group to canvas and store reference
+        canvas.add(group);
+        componentGroupsRef.current.set(instanceId, group);
       }
 
       canvas.renderAll();
     };
 
     renderAllComponents();
-  }, [canvas, allComponents, variables, components, componentChoices, allowInteraction, scale]);
+  }, [
+    canvas,
+    allComponents,
+    variables,
+    components,
+    componentChoices,
+    allowInteraction,
+    scale,
+    onComponentPositionChange,
+  ]);
 
-  // Cleanup function to remove all component objects
+  // Cleanup function to remove all component groups
   const cleanup = () => {
-    componentObjectsRef.current.forEach((obj) => {
-      canvas?.remove(obj);
+    componentGroupsRef.current.forEach((group) => {
+      canvas?.remove(group);
     });
-    componentObjectsRef.current.clear();
+    componentGroupsRef.current.clear();
     canvas?.renderAll();
   };
 
   return {
     cleanup,
-    componentObjects: componentObjectsRef.current,
+    componentGroups: componentGroupsRef.current,
   };
 }

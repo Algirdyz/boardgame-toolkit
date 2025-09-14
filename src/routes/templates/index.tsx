@@ -65,7 +65,7 @@ function Templates() {
   const cards: NavigationCard[] = templates.data
     ? templates.data.map((t) => ({
         title: t.name,
-        subtitle: `${t.shape.vertices.length} shape points`,
+        subtitle: `${0} shape points`,
         link: `/templates/${t.id}`,
         onDelete: t.id ? () => deleteTemplateMutation.mutate(t.id!) : undefined,
       }))
