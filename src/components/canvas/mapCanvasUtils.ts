@@ -85,6 +85,9 @@ export function setupCellHoverEffects(
     getCellTypeColor: (cellType: CellType) => string;
     getCellTypeById: (id: string) => CellType | undefined;
     handleCellClick: (x: number, y: number) => void;
+    handleCellDrag: (x: number, y: number) => void;
+    handleDragEnd: () => void;
+    paintCell: (x: number, y: number) => void;
   }>
 ) {
   const tileCoord = (group as any).cellCoord as TileCoord;
@@ -94,6 +97,9 @@ export function setupCellHoverEffects(
     if (!functionsRef.current) return;
     const currentCell = functionsRef.current.getCellByCoord(tileCoord.x, tileCoord.y);
     const activeCellType = functionsRef.current.getActiveCellType();
+
+    // Handle drag painting on mouseover - this will check if we're dragging internally
+    functionsRef.current.handleCellDrag(tileCoord.x, tileCoord.y);
 
     if (!currentCell && activeCellType) {
       // Show preview of what would be painted

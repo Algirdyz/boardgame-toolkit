@@ -1,11 +1,5 @@
-import {
-  Point,
-  Rect,
-  type Canvas,
-  type TPointerEvent,
-  type TPointerEventInfo,
-} from "fabric";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef } from 'react';
+import { Point, Rect, type Canvas, type TPointerEvent, type TPointerEventInfo } from 'fabric';
 
 interface UseCanvasInteractionsProps {
   canvasRef: React.RefObject<Canvas | null>;
@@ -38,11 +32,11 @@ export function useCanvasInteractions({
     };
 
     if (onMouseMove) {
-      canvas.on("mouse:move", handleMouseMove);
+      canvas.on('mouse:move', handleMouseMove);
     }
 
     return () => {
-      canvas.off("mouse:move", handleMouseMove);
+      canvas.off('mouse:move', handleMouseMove);
     };
   }, [onMouseMove]);
 
@@ -52,9 +46,9 @@ export function useCanvasInteractions({
 
     const updateCursor = (grabbing: boolean) => {
       if (zoomEnabled && canvas.getZoom() > 1) {
-        canvas.setCursor(grabbing ? "grabbing" : "grab");
+        canvas.setCursor(grabbing ? 'grabbing' : 'grab');
       } else {
-        canvas.setCursor("default");
+        canvas.setCursor('default');
       }
     };
 
@@ -82,7 +76,7 @@ export function useCanvasInteractions({
       // Update stroke width on all objects
       canvas.getObjects().forEach((obj) => {
         if (obj instanceof Rect) {
-          obj.set("strokeWidth", 1 / zoom);
+          obj.set('strokeWidth', 1 / zoom);
         }
       });
 
@@ -94,6 +88,7 @@ export function useCanvasInteractions({
     // PAN LOGIC
     const handleMouseDown = (opt: TPointerEventInfo<TPointerEvent>) => {
       if (!panEnabled || opt.target?.selectable) return;
+      if ((opt.e as any).button !== 2) return;
       dragging.current = true;
       updateCursor(true);
     };
@@ -122,17 +117,17 @@ export function useCanvasInteractions({
       updateCursor(false);
     };
 
-    canvas.on("mouse:wheel", handleZoom);
-    canvas.on("mouse:down", handleMouseDown);
-    canvas.on("mouse:move", handleMouseMove);
-    canvas.on("mouse:up", handleMouseUp);
+    canvas.on('mouse:wheel', handleZoom);
+    canvas.on('mouse:down', handleMouseDown);
+    canvas.on('mouse:move', handleMouseMove);
+    canvas.on('mouse:up', handleMouseUp);
 
     return () => {
       if ((canvas as any).__eventListeners) {
-        canvas.off("mouse:wheel", handleZoom);
-        canvas.off("mouse:down", handleMouseDown);
-        canvas.off("mouse:move", handleMouseMove);
-        canvas.off("mouse:up", handleMouseUp);
+        canvas.off('mouse:wheel', handleZoom);
+        canvas.off('mouse:down', handleMouseDown);
+        canvas.off('mouse:move', handleMouseMove);
+        canvas.off('mouse:up', handleMouseUp);
       }
     };
   }, [canvasRef, panEnabled, zoomEnabled]);

@@ -34,9 +34,16 @@ function MapEditor() {
     }
   };
 
-  const handleMapChange = (updatedMap: any) => {
+  const handleMapChange = async (updatedMap: any) => {
     // Update the query data locally
     queryClient.setQueryData(['maps', parseInt(mapId, 10)], updatedMap);
+
+    // Auto-save the map changes
+    try {
+      await saveMutation.mutateAsync(updatedMap);
+    } catch (error) {
+      console.error('Failed to save map changes:', error);
+    }
   };
 
   const handleCellTypesChange = async (cellTypes: CellType[]) => {

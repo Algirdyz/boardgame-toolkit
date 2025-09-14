@@ -49,6 +49,10 @@ export function MapCanvas({ map, width, height, onMapChange }: MapCanvasProps) {
   // Active cell type for painting
   const [activeCellType, setActiveCellType] = useState<CellType | null>(null);
 
+  // Drag painting state
+  const [isDragging, setIsDragging] = useState(false);
+  const lastPaintedCellRef = useRef<{ x: number; y: number } | null>(null);
+
   // Load variables for color rendering
   const { data: variables } = useQuery({
     queryKey: ['variables'],
@@ -83,6 +87,56 @@ export function MapCanvas({ map, width, height, onMapChange }: MapCanvasProps) {
   };
 
   const handleCellClick = (x: number, y: number) => {
+    paintCell(x, y);
+    setIsDragging(true);
+    lastPaintedCellRef.current = { x, y };
+  };
+
+  const handleCellDrag = (x: number, y: number) => {
+    // Only paint if we're dragging and this is a different cell than the last one painted
+    if (!isDragging) return;
+    if (lastPaintedCellRef.current?.x === x && lastPaintedCellRef.current?.y === y) return;
+    // Update visual immediately without triggering full re-render
+    updateCellVisualDirectly(x, y);
+    lastPaintedCellRef.current = { x, y };
+  };
+
+  const updateCellVisualDirectly = (x: number, y: number) => {
+    const cellKey = `${x},${y}`;
+    const interactiveCell = interactiveCellsRef.current.get(cellKey);
+    if (!interactiveCell) return;
+
+    if (activeCellType) {
+      // Apply the cell type color directly to the fabric object
+      const color = getCellTypeColor(activeCellType);
+      const cellFill = (interactiveCell as any).cellFill;
+      cellFill.set({
+        fill: color,
+        opacity: 0.7,
+      });
+    } else {
+      // Erase mode - make cell transparent
+      const cellFill = (interactiveCell as any).cellFill;
+      cellFill.set({
+        fill: 'rgba(0,0,0,0)',
+        opacity: 0,
+      });
+    }
+
+    // Update the actual data in background (this will eventually sync the state)
+    paintCell(x, y);
+
+    // Render the canvas
+    const canvas = canvasRef.current;
+    if (canvas) canvas.renderAll();
+  };
+
+  const handleDragEnd = () => {
+    setIsDragging(false);
+    lastPaintedCellRef.current = null;
+  };
+
+  const paintCell = (x: number, y: number) => {
     if (!onMapChange) return;
 
     const cells = map.cells || [];
@@ -121,6 +175,10 @@ export function MapCanvas({ map, width, height, onMapChange }: MapCanvasProps) {
     getCellTypeById,
     getActiveCellType,
     handleCellClick,
+    handleCellDrag,
+    handleDragEnd,
+    paintCell,
+    updateCellVisualDirectly,
   });
 
   // Update the functions ref whenever dependencies change
@@ -131,14 +189,42 @@ export function MapCanvas({ map, width, height, onMapChange }: MapCanvasProps) {
       getCellTypeById,
       getActiveCellType,
       handleCellClick,
+      handleCellDrag,
+      handleDragEnd,
+      paintCell,
+      updateCellVisualDirectly,
     };
-  }, [getCellByCoord, getCellTypeColor, getCellTypeById, getActiveCellType, handleCellClick]);
+  }, [
+    getCellByCoord,
+    getCellTypeColor,
+    getCellTypeById,
+    getActiveCellType,
+    handleCellClick,
+    handleCellDrag,
+    handleDragEnd,
+    paintCell,
+    updateCellVisualDirectly,
+  ]);
 
   useCanvasInteractions({
     canvasRef,
     panEnabled: true,
     zoomEnabled: true,
   });
+
+  // Add global mouse up listener to end drag painting
+  useEffect(() => {
+    const handleGlobalMouseUp = () => {
+      if (isDragging) {
+        handleDragEnd();
+      }
+    };
+
+    document.addEventListener('mouseup', handleGlobalMouseUp);
+    return () => {
+      document.removeEventListener('mouseup', handleGlobalMouseUp);
+    };
+  }, [isDragging, handleDragEnd]);
 
   // Effect 1: Create grid and interactive cells (only when dimensions change)
   useEffect(() => {
