@@ -11,7 +11,7 @@ interface UseFabricCanvasOptions {
 }
 
 interface UseFabricCanvasResult {
-  canvasHtmlRef: RefObject<HTMLCanvasElement | null>;
+  canvasHtmlRef: (element: HTMLCanvasElement | null) => void;
   canvasRef: RefObject<fabric.Canvas | null>;
   canvasDims: CanvasDims;
   isGridEnabled: boolean;
@@ -27,6 +27,7 @@ const useFabricCanvas = (
   const canvasHtmlRef = useRef<HTMLCanvasElement>(null);
   const canvasRef = useRef<fabric.Canvas | null>(null);
   const [canvasDims, setCanvasDims] = useState({ width, height });
+  const [canvasElement, setCanvasElement] = useState<HTMLCanvasElement | null>(null);
 
   // Initialize grid functionality
   const {
@@ -43,26 +44,31 @@ const useFabricCanvas = (
     labelSize: 12,
   });
 
-  useEffect(() => {
-    const canvasEl = canvasHtmlRef.current;
-    if (!canvasEl) return;
+  // Callback ref to track when canvas element is available
+  const setCanvasHtmlRef = (element: HTMLCanvasElement | null) => {
+    canvasHtmlRef.current = element;
+    setCanvasElement(element);
+  };
 
-    if (!canvasRef.current) {
-      canvasRef.current = new fabric.Canvas(canvasEl, {
-        width,
-        height,
-        selection: false,
-        fireRightClick: true,
-        stopContextMenu: true,
-      });
-    }
+  // Initialize canvas when element becomes available
+  useEffect(() => {
+    if (!canvasElement || canvasRef.current) return;
+
+    canvasRef.current = new fabric.Canvas(canvasElement, {
+      width,
+      height,
+      selection: false,
+      fireRightClick: true,
+      stopContextMenu: true,
+    });
+
     setupGrid();
 
     return () => {
       canvasRef.current?.dispose();
       canvasRef.current = null;
     };
-  }, []);
+  }, [canvasElement, width, height, setupGrid]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -78,7 +84,7 @@ const useFabricCanvas = (
   }, [width, height, updateGrid]);
 
   return {
-    canvasHtmlRef,
+    canvasHtmlRef: setCanvasHtmlRef,
     canvasRef,
     canvasDims,
     isGridEnabled,

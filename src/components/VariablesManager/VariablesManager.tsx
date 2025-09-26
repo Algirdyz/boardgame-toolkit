@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Variable, VariableType } from '@shared/variables';
 import { Alert, Center, Container, Loader, Stack, Tabs, Text, Title } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { IconPalette, IconRuler, IconShape, IconTag } from '@tabler/icons-react';
+import { IconPalette, IconRuler, IconShape, IconTag, IconTypography } from '@tabler/icons-react';
 import { useNavigate, useParams } from '@tanstack/react-router';
 import { useVariablesManager } from './useVariablesManager';
 import { VariableList } from './VariableList';
@@ -19,7 +19,7 @@ export function VariablesManager() {
   const currentTab = (params as any)?.variableType || 'colors';
 
   // Validate that the tab is a valid variable type
-  const validTabs = ['colors', 'shapes', 'dimensions', 'names'];
+  const validTabs = ['colors', 'shapes', 'dimensions', 'names', 'textStyles'];
   const activeTab = validTabs.includes(currentTab) ? currentTab : 'colors';
 
   const [colorModalOpened, { open: openColorModal, close: closeColorModal }] = useDisclosure(false);
@@ -27,6 +27,8 @@ export function VariablesManager() {
   const [dimensionModalOpened, { open: openDimensionModal, close: closeDimensionModal }] =
     useDisclosure(false);
   const [nameModalOpened, { open: openNameModal, close: closeNameModal }] = useDisclosure(false);
+  const [textStyleModalOpened, { open: openTextStyleModal, close: closeTextStyleModal }] =
+    useDisclosure(false);
 
   const { variables, saveMutation, deleteMutation } = useVariablesManager();
 
@@ -70,6 +72,9 @@ export function VariablesManager() {
       case 'names':
         openNameModal();
         break;
+      case 'textStyles':
+        openTextStyleModal();
+        break;
     }
   };
 
@@ -80,6 +85,7 @@ export function VariablesManager() {
     closeShapeModal();
     closeDimensionModal();
     closeNameModal();
+    closeTextStyleModal();
   };
 
   const handleSave = (type: VariableType, variable: Variable) => {
@@ -104,7 +110,7 @@ export function VariablesManager() {
       </Container>
     );
   }
-
+  console.log('rendering VariablesManager');
   return (
     <Container size="lg" py="xl">
       <Stack gap="xl">
@@ -129,6 +135,9 @@ export function VariablesManager() {
             </Tabs.Tab>
             <Tabs.Tab value="names" leftSection={<IconTag size={16} />}>
               Names
+            </Tabs.Tab>
+            <Tabs.Tab value="textStyles" leftSection={<IconTypography size={16} />}>
+              Text Styles
             </Tabs.Tab>
           </Tabs.List>
 
@@ -171,6 +180,16 @@ export function VariablesManager() {
               onDelete={handleDelete}
             />
           </Tabs.Panel>
+
+          <Tabs.Panel value="textStyles" pt="xl">
+            <VariableList
+              type="textStyles"
+              variables={variables.data?.textStyles || []}
+              onAdd={handleAdd}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
+          </Tabs.Panel>
         </Tabs>
 
         <VariableModalManager
@@ -180,6 +199,7 @@ export function VariablesManager() {
           shapeModalOpened={shapeModalOpened}
           dimensionModalOpened={dimensionModalOpened}
           nameModalOpened={nameModalOpened}
+          textStyleModalOpened={textStyleModalOpened}
           onModalClose={handleModalClose}
           onSave={handleSave}
         />

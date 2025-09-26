@@ -1,5 +1,12 @@
 import { Button, Group, Paper, SimpleGrid, Stack, Text, Title } from '@mantine/core';
-import { IconPalette, IconPlus, IconRuler, IconShape, IconTag } from '@tabler/icons-react';
+import {
+  IconPalette,
+  IconPlus,
+  IconRuler,
+  IconShape,
+  IconTag,
+  IconTypography,
+} from '@tabler/icons-react';
 import { VariableListProps } from './types';
 import { VariableCard } from './VariableCard';
 
@@ -14,6 +21,8 @@ export function VariableList({ type, variables, onAdd, onEdit, onDelete }: Varia
         return <IconRuler size={16} />;
       case 'names':
         return <IconTag size={16} />;
+      case 'textStyles':
+        return <IconTypography size={16} />;
     }
   };
 

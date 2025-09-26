@@ -1,8 +1,15 @@
-import { VariableColor, VariableDimension, VariableName, VariableShape } from '@shared/variables';
+import {
+  VariableColor,
+  VariableDimension,
+  VariableName,
+  VariableShape,
+  VariableTextStyle,
+} from '@shared/variables';
 import { ColorVariableModal } from './modals/ColorVariableModal';
 import { DimensionVariableModal } from './modals/DimensionVariableModal';
 import { NameVariableModal } from './modals/NameVariableModal';
 import { ShapeVariableModal } from './modals/ShapeVariableModal';
+import { TextStyleVariableModal } from './modals/TextStyleVariableModal';
 import { VariableModalManagerProps } from './types';
 
 export function VariableModalManager({
@@ -12,6 +19,7 @@ export function VariableModalManager({
   shapeModalOpened,
   dimensionModalOpened,
   nameModalOpened,
+  textStyleModalOpened,
   onModalClose,
   onSave,
 }: VariableModalManagerProps) {
@@ -43,6 +51,13 @@ export function VariableModalManager({
         onClose={onModalClose}
         variable={editingType === 'names' ? (editingVariable as VariableName) : null}
         onSave={(variable) => onSave('names', variable)}
+      />
+
+      <TextStyleVariableModal
+        opened={textStyleModalOpened}
+        onClose={onModalClose}
+        variable={editingType === 'textStyles' ? (editingVariable as VariableTextStyle) : null}
+        onSave={(variable) => onSave('textStyles', variable)}
       />
     </>
   );
