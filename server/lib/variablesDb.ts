@@ -47,6 +47,14 @@ export function getDbVariables(): Variables {
           value: row.value,
         });
         break;
+      case 'textStyles': {
+        const parsed = JSON.parse(row.value);
+        result.textStyles.push({
+          ...baseItem,
+          ...parsed,
+        });
+        break;
+      }
     }
   });
 
