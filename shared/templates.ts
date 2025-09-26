@@ -1,4 +1,5 @@
 import { ComponentTemplateSpecs } from './components';
+import { TextTemplateSpecs } from './text';
 
 export interface ComponentPosition {
   x: number;
@@ -35,11 +36,19 @@ export interface ComponentRenderDefinition {
   templateSpecs: ComponentTemplateSpecs;
 }
 
+export interface TextRenderDefinition {
+  styleId: number; // ID of the text style variable
+  templateSpecs: TextTemplateSpecs;
+}
+
 export interface TemplateDefinition {
   id?: number;
   shape: TileShape;
   name: string;
   components: {
     [componentInstanceId: string]: ComponentRenderDefinition;
+  };
+  textFields: {
+    [textFieldInstanceId: string]: TextRenderDefinition;
   };
 }

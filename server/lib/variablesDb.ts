@@ -10,6 +10,7 @@ export function getDbVariables(): Variables {
     shapes: [],
     dimensions: [],
     names: [],
+    textStyles: [],
   };
 
   rows.forEach((row) => {
@@ -78,6 +79,16 @@ export function saveDbVariable(type: VariableType, variable: Variable): number {
     case 'names':
       value = (variable as any).value;
       break;
+    case 'textStyles': {
+      const textStyleVar = variable as any;
+      value = JSON.stringify({
+        textSize: textStyleVar.textSize,
+        fontFamily: textStyleVar.fontFamily,
+        textColorId: textStyleVar.textColorId,
+        strokeWidth: textStyleVar.strokeWidth,
+      });
+      break;
+    }
     default:
       throw new Error(`Unknown variable type: ${type}`);
   }

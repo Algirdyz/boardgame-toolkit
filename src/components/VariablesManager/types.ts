@@ -22,6 +22,7 @@ export interface VariableModalManagerProps {
   shapeModalOpened: boolean;
   dimensionModalOpened: boolean;
   nameModalOpened: boolean;
+  textStyleModalOpened: boolean;
   onModalClose: () => void;
   onSave: (type: VariableType, variable: Variable) => void;
 }

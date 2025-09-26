@@ -13,6 +13,9 @@ export interface TileDefinition {
   componentChoices: {
     [componentInstanceId: string]: number; // Maps component instance ID to choice index
   };
+  textFieldContent: {
+    [textFieldInstanceId: string]: string; // Maps text field instance ID to text content
+  };
 }
 
 export function ensureTileDefaults(tile: Partial<TileDefinition>): TileDefinition {
@@ -20,6 +23,7 @@ export function ensureTileDefaults(tile: Partial<TileDefinition>): TileDefinitio
     name: tile.name || 'Untitled Tile',
     templateId: tile.templateId || 0,
     componentChoices: tile.componentChoices || {},
+    textFieldContent: tile.textFieldContent || {},
     ...tile,
   };
 }
