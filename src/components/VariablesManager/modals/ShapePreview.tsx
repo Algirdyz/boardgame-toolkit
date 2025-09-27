@@ -1,8 +1,9 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { VariableColor, VariableShape } from '@shared/variables';
 import { Box } from '@mantine/core';
 import * as fabric from 'fabric';
 import { createFabricShape } from '../../../lib/fabricRenderer/shapeFactory';
+import useStaticCanvas from '@/hooks/useStaticCanvas';
 
 interface ShapePreviewProps {
   shape: VariableShape;
@@ -11,39 +12,7 @@ interface ShapePreviewProps {
 }
 
 export function ShapePreview({ shape, width = 200, height = 150 }: ShapePreviewProps) {
-  const canvasHtmlRef = useRef<HTMLCanvasElement>(null);
-  const canvasRef = useRef<fabric.Canvas | null>(null);
-
-  useEffect(() => {
-    const canvasEl = canvasHtmlRef.current;
-    if (!canvasEl) return;
-
-    if (!canvasRef.current) {
-      canvasRef.current = new fabric.Canvas(canvasEl, {
-        width,
-        height,
-        selection: false,
-        fireRightClick: false,
-        stopContextMenu: true,
-        allowTouchScrolling: false,
-        moveCursor: 'default',
-        hoverCursor: 'default',
-        defaultCursor: 'default',
-        interactive: false,
-      });
-
-      // Disable all interactions
-      canvasRef.current.forEachObject((obj) => {
-        obj.selectable = false;
-        obj.evented = false;
-      });
-    }
-
-    return () => {
-      canvasRef.current?.dispose();
-      canvasRef.current = null;
-    };
-  }, [width, height]);
+  const { canvasHtmlRef, canvasRef } = useStaticCanvas(width, height);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -119,7 +88,11 @@ export function ShapePreview({ shape, width = 200, height = 150 }: ShapePreviewP
   );
 }
 
-function addErrorPlaceholder(canvas: fabric.Canvas, canvasWidth: number, canvasHeight: number) {
+function addErrorPlaceholder(
+  canvas: fabric.Canvas | fabric.StaticCanvas,
+  canvasWidth: number,
+  canvasHeight: number
+) {
   const centerX = canvasWidth / 2;
   const centerY = canvasHeight / 2;
 

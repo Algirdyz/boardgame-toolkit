@@ -16,8 +16,16 @@ import { useQuery } from '@tanstack/react-query';
 import { VariableEditComponentProps } from '../variableTypeConfig';
 import { getVariables } from '@/api/variablesApi';
 import { ColorVariableSelector } from '@/components/VariableSelectors/ColorVariableSelector';
-import useFabricCanvas from '@/hooks/useFabricCanvas';
+import useStaticCanvas from '@/hooks/useStaticCanvas';
 import { createFabricTextWithColor } from '@/lib/fabricTextUtils';
+
+const fontFamilyOptions = [
+  { value: 'Arial', label: 'Arial' },
+  { value: 'Times New Roman', label: 'Times New Roman' },
+  { value: 'Courier New', label: 'Courier New' },
+  { value: 'Georgia', label: 'Georgia' },
+  { value: 'Verdana', label: 'Verdana' },
+];
 
 export function TextStyleEditForm({
   variable,
@@ -26,9 +34,7 @@ export function TextStyleEditForm({
   loading,
 }: VariableEditComponentProps) {
   const { ref, width, height } = useElementSize();
-  const { canvasHtmlRef, canvasRef, canvasDims } = useFabricCanvas(width, height, {
-    showGrid: false,
-  });
+  const { canvasHtmlRef, canvasRef, canvasDims } = useStaticCanvas(width, height);
 
   const variables = useQuery({
     queryKey: ['variables'],
@@ -48,7 +54,6 @@ export function TextStyleEditForm({
 
   // Initialize form with variable data
   useEffect(() => {
-    console.log('TextStyleEditForm useEffect triggered with variable:', variable);
     if (variable) {
       const textVar = variable as VariableTextStyle;
       setName(textVar.name);
@@ -78,7 +83,7 @@ export function TextStyleEditForm({
 
     // Create a temporary text style from current form values
     const tempTextStyle: VariableTextStyle = {
-      name,
+      name: 'test',
       textSize,
       fontFamily,
       textColorId,
@@ -94,8 +99,8 @@ export function TextStyleEditForm({
     });
 
     canvas.add(textObject);
-    canvas.renderAll();
-  }, [name, textSize, fontFamily, textColorId, strokeWidth, variables.data, canvasDims, canvasRef]);
+    canvas.requestRenderAll();
+  }, [textSize, fontFamily, textColorId, strokeWidth, variables.data?.colors, canvasDims]);
 
   // Validation function
   const validateForm = useCallback(() => {
@@ -116,121 +121,116 @@ export function TextStyleEditForm({
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   }, [name, textSize, strokeWidth]);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!validateForm()) {
-      return;
-    }
-
-    const textStyleVariable: VariableTextStyle = {
-      ...(variable?.id && { id: variable.id }),
-      name: name.trim(),
-      textSize,
-      fontFamily,
-      textColorId,
-      strokeWidth,
-      description: description.trim() || undefined,
-    };
-    onSave(textStyleVariable);
-  };
-
-  const fontFamilyOptions = [
-    { value: 'Arial', label: 'Arial' },
-    { value: 'Helvetica', label: 'Helvetica' },
-    { value: 'Times New Roman', label: 'Times New Roman' },
-    { value: 'Courier New', label: 'Courier New' },
-    { value: 'Georgia', label: 'Georgia' },
-    { value: 'Verdana', label: 'Verdana' },
-  ];
+  console.log('Rendering TextStyleEditForm with errors');
+  const selectColor = useCallback(
+    (colorId: number | null) => {
+      setTextColorId(colorId || undefined);
+    },
+    [setTextColorId]
+  );
 
   return (
-    <form onSubmit={handleSubmit}>
-      <Stack gap="md">
-        <TextInput
-          label="Name"
-          placeholder="Enter text style name"
+    <Stack gap="md">
+      <TextInput
+        label="Name"
+        placeholder="Enter text style name"
+        required
+        value={name}
+        onChange={(event) => setName(event.currentTarget.value)}
+        error={errors.name}
+      />
+
+      <Group grow>
+        <NumberInput
+          label="Text Size (px)"
+          placeholder="16"
+          min={8}
+          max={200}
           required
-          value={name}
-          onChange={(event) => setName(event.currentTarget.value)}
-          error={errors.name}
+          value={textSize}
+          onChange={(value) => setTextSize(typeof value === 'number' ? value : 16)}
+          error={errors.textSize}
         />
-
-        <Group grow>
-          <NumberInput
-            label="Text Size (px)"
-            placeholder="16"
-            min={8}
-            max={200}
-            required
-            value={textSize}
-            onChange={(value) => setTextSize(typeof value === 'number' ? value : 16)}
-            error={errors.textSize}
-          />
-          <Select
-            label="Font Family"
-            placeholder="Select font family"
-            data={fontFamilyOptions}
-            required
-            value={fontFamily}
-            onChange={(value) => setFontFamily(value || 'Arial')}
-            error={errors.fontFamily}
-          />
-        </Group>
-
-        <Group grow>
-          <ColorVariableSelector
-            label="Text Color"
-            placeholder="Select color"
-            value={textColorId}
-            onChange={(value) => setTextColorId(value || undefined)}
-            clearable
-            searchable
-            size="sm"
-          />
-          <NumberInput
-            label="Stroke Width (px)"
-            placeholder="1"
-            min={0}
-            max={10}
-            value={strokeWidth}
-            onChange={(value) => setStrokeWidth(typeof value === 'number' ? value : 0)}
-            error={errors.strokeWidth}
-          />
-        </Group>
-
-        <div>
-          <Text size="sm" fw={500} mb="xs">
-            Preview
-          </Text>
-          <Box ref={ref} w="100%" h="60px">
-            <canvas
-              ref={canvasHtmlRef}
-              style={{
-                border: '1px solid #dee2e6',
-                borderRadius: '4px',
-              }}
-            />
-          </Box>
-        </div>
-        <Textarea
-          label="Description"
-          placeholder="Optional description"
-          rows={3}
-          value={description}
-          onChange={(event) => setDescription(event.currentTarget.value)}
+        <Select
+          label="Font Family"
+          placeholder="Select font family"
+          data={fontFamilyOptions}
+          required
+          value={fontFamily}
+          onChange={(value) => setFontFamily(value || 'Arial')}
+          error={errors.fontFamily}
         />
+      </Group>
 
-        <Group justify="flex-end">
-          <Button variant="outline" onClick={onCancel} disabled={loading}>
-            Cancel
-          </Button>
-          <Button type="submit" loading={loading}>
-            {variable ? 'Update' : 'Create'}
-          </Button>
-        </Group>
-      </Stack>
-    </form>
+      <Group grow>
+        <ColorVariableSelector
+          label="Text Color"
+          placeholder="Select color"
+          value={textColorId}
+          onChange={selectColor}
+          clearable
+          searchable
+          size="sm"
+        />
+        <NumberInput
+          label="Stroke Width (px)"
+          placeholder="1"
+          min={0}
+          max={10}
+          value={strokeWidth}
+          onChange={(value) => setStrokeWidth(typeof value === 'number' ? value : 0)}
+          error={errors.strokeWidth}
+        />
+      </Group>
+
+      <div>
+        <Text size="sm" fw={500} mb="xs">
+          Preview
+        </Text>
+        <Box ref={ref} w="100%" h="60px">
+          <canvas
+            ref={canvasHtmlRef}
+            style={{
+              border: '1px solid #dee2e6',
+              borderRadius: '4px',
+            }}
+          />
+        </Box>
+      </div>
+      <Textarea
+        label="Description"
+        placeholder="Optional description"
+        rows={3}
+        value={description}
+        onChange={(event) => setDescription(event.currentTarget.value)}
+      />
+
+      <Group justify="flex-end">
+        <Button variant="outline" onClick={onCancel} disabled={loading}>
+          Cancel
+        </Button>
+        <Button
+          loading={loading}
+          onClick={() => {
+            if (!validateForm()) {
+              return;
+            }
+
+            const textStyleVariable: VariableTextStyle = {
+              ...(variable?.id && { id: variable.id }),
+              name: name.trim(),
+              textSize,
+              fontFamily,
+              textColorId,
+              strokeWidth,
+              description: description.trim() || undefined,
+            };
+            onSave(textStyleVariable);
+          }}
+        >
+          {variable ? 'Update' : 'Create'}
+        </Button>
+      </Group>
+    </Stack>
   );
 }

@@ -1,4 +1,5 @@
-import { forwardRef } from 'react';
+import { forwardRef, memo, useCallback, useMemo } from 'react';
+import { VariableColor } from '@shared/variables';
 import { Group, Select, Text } from '@mantine/core';
 import { useQuery } from '@tanstack/react-query';
 import { getVariables } from '@/api/variablesApi';
@@ -23,7 +24,7 @@ interface ColorOption {
 }
 
 // Compact component for rendering color option in dropdown
-const CompactColorOption = ({ option }: { option: ColorOption }) => (
+const CompactColorOption = memo(({ option }: { option: ColorOption }) => (
   <Group gap="sm">
     <div
       style={{
@@ -41,9 +42,42 @@ const CompactColorOption = ({ option }: { option: ColorOption }) => (
       </Text>
     )}
   </Group>
+));
+
+const ColorPreview = memo(
+  ({ label, color }: { label?: string; color: VariableColor | undefined }) => {
+    const colorValue = color?.value || 'transparent';
+    const isTransparent = !color || color.value === 'transparent';
+
+    return (
+      <Group gap="xs" align="center" mb={2}>
+        {label && (
+          <Text size="xs" fw={500}>
+            {label}
+          </Text>
+        )}
+        <div
+          style={{
+            width: 16,
+            height: 16,
+            backgroundColor: isTransparent ? '#f8f9fa' : colorValue,
+            border: isTransparent ? '2px dashed #ccc' : '1px solid #ccc',
+            borderRadius: 3,
+          }}
+        />
+        {color && (
+          <Text size="xs" c="dimmed">
+            {color.name}
+          </Text>
+        )}
+      </Group>
+    );
+  }
 );
 
-export const ColorVariableSelector = forwardRef<HTMLInputElement, ColorVariableSelectorProps>(
+CompactColorOption.displayName = 'CompactColorOption';
+
+const ColorVariableSelectorComponent = forwardRef<HTMLInputElement, ColorVariableSelectorProps>(
   (
     {
       value,
@@ -60,6 +94,7 @@ export const ColorVariableSelector = forwardRef<HTMLInputElement, ColorVariableS
     },
     ref
   ) => {
+    console.log;
     const { data: variables, isLoading } = useQuery({
       queryKey: ['variables'],
       queryFn: getVariables,
@@ -67,81 +102,75 @@ export const ColorVariableSelector = forwardRef<HTMLInputElement, ColorVariableS
 
     const colors = variables?.colors || [];
 
-    // Convert colors to compact select options
-    const colorOptions: ColorOption[] = [
-      { value: '', label: 'No Color', color: 'transparent' },
-      ...colors.map((color) => ({
-        value: color.id?.toString() || '',
-        label: color.name,
-        color: color.value,
-      })),
-    ];
+    // Convert colors to compact select options with useMemo for performance
+    const colorOptions: ColorOption[] = useMemo(
+      () => [
+        { value: '', label: 'No Color', color: 'transparent' },
+        ...colors.map((color) => ({
+          value: color.id?.toString() || '',
+          label: color.name,
+          color: color.value,
+        })),
+      ],
+      [colors]
+    );
 
-    const handleChange = (selectedValue: string | null) => {
-      if (onChange) {
-        onChange(selectedValue && selectedValue !== '' ? parseInt(selectedValue, 10) : null);
-      }
-    };
+    const handleChange = useCallback(
+      (selectedValue: string | null) => {
+        if (onChange) {
+          onChange(selectedValue && selectedValue !== '' ? parseInt(selectedValue, 10) : null);
+        }
+      },
+      [onChange]
+    );
 
-    // Find selected color for display
-    const selectedColor = colors.find((c) => c.id === value);
+    // Find selected color for display with useMemo for performance
+    const selectedColor = useMemo(() => colors.find((c) => c.id === value), [colors, value]);
 
-    // Helper function to render selected color preview
-    const renderSelectedColorPreview = () => {
-      if (!showPreview) return null;
+    // Memoized render option function to prevent recreations
+    const renderOption = useCallback(
+      ({ option }: { option: any }) => {
+        const colorOption = colorOptions.find((c) => c.value === option.value);
+        return colorOption ? <CompactColorOption option={colorOption} /> : option.label;
+      },
+      [colorOptions]
+    );
 
-      const colorValue = selectedColor?.value || 'transparent';
-      const isTransparent = !selectedColor || colorValue === 'transparent';
+    // Memoized combobox props to prevent object recreation
+    const comboboxProps = useMemo(
+      () => ({
+        dropdownPadding: 4,
+        width: 250,
+      }),
+      []
+    );
 
-      return (
-        <Group gap="xs" align="center" mb={2}>
-          {label && (
-            <Text size="xs" fw={500}>
-              {label}
-            </Text>
-          )}
-          <div
-            style={{
-              width: 16,
-              height: 16,
-              backgroundColor: isTransparent ? '#f8f9fa' : colorValue,
-              border: isTransparent ? '2px dashed #ccc' : '1px solid #ccc',
-              borderRadius: 3,
-            }}
-          />
-          {selectedColor && (
-            <Text size="xs" c="dimmed">
-              {selectedColor.name}
-            </Text>
-          )}
-        </Group>
-      );
-    };
+    // Memoized placeholder to prevent string recreation
+    const memoizedPlaceholder = useMemo(
+      () => placeholder || (isLoading ? 'Loading colors...' : 'Select a color'),
+      [placeholder, isLoading]
+    );
 
+    // Memoized value string conversion
+    const memoizedValue = useMemo(() => value?.toString() || '', [value]);
     return (
       <div>
-        {showPreview && renderSelectedColorPreview()}
+        {showPreview && <ColorPreview label={label} color={selectedColor} />}
         <Select
           ref={ref}
           label={!showPreview ? label : undefined}
-          placeholder={placeholder || (isLoading ? 'Loading colors...' : 'Select a color')}
+          placeholder={memoizedPlaceholder}
           description={description}
           error={error}
           data={colorOptions}
-          value={value?.toString() || ''}
+          value={memoizedValue}
           onChange={handleChange}
           disabled={isLoading}
           searchable={searchable}
           clearable={clearable}
           size={size}
-          renderOption={({ option }) => {
-            const colorOption = colorOptions.find((c) => c.value === option.value);
-            return colorOption ? <CompactColorOption option={colorOption} /> : option.label;
-          }}
-          comboboxProps={{
-            dropdownPadding: 4,
-            width: 250,
-          }}
+          renderOption={renderOption}
+          comboboxProps={comboboxProps}
           {...props}
         />
       </div>
@@ -149,4 +178,6 @@ export const ColorVariableSelector = forwardRef<HTMLInputElement, ColorVariableS
   }
 );
 
-ColorVariableSelector.displayName = 'ColorVariableSelector';
+ColorVariableSelectorComponent.displayName = 'ColorVariableSelector';
+
+export const ColorVariableSelector = memo(ColorVariableSelectorComponent);

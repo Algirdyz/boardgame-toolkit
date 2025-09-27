@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Variable, VariableType } from '@shared/variables';
 import { Alert, Center, Container, Loader, Stack, Tabs, Text, Title } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
@@ -38,38 +38,41 @@ export function VariablesManager() {
     }
   };
 
-  const handleAdd = (type: VariableType) => {
+  const handleAdd = useCallback((type: VariableType) => {
     setEditingVariable(null);
     setEditingType(type);
     openModal();
-  };
+  }, []);
 
-  const handleEdit = (type: VariableType, variable: Variable) => {
+  const handleEdit = useCallback((type: VariableType, variable: Variable) => {
     setEditingVariable(variable);
     setEditingType(type);
     openModal();
-  };
+  }, []);
 
-  const handleDelete = (_type: VariableType, id: number) => {
+  const handleDelete = useCallback((_type: VariableType, id: number) => {
     deleteMutation.mutate(id);
-  };
+  }, []);
 
-  const handleModalClose = () => {
+  const handleModalClose = useCallback(() => {
     setEditingVariable(null);
     setEditingType(null);
     closeModal();
-  };
+  }, []);
 
-  const handleSave = (type: VariableType, variable: Variable) => {
-    saveMutation.mutate(
-      { type, variable },
-      {
-        onSuccess: () => {
-          handleModalClose();
-        },
-      }
-    );
-  };
+  const handleSave = useCallback(
+    (type: VariableType, variable: Variable) => {
+      saveMutation.mutate(
+        { type, variable },
+        {
+          onSuccess: () => {
+            handleModalClose();
+          },
+        }
+      );
+    },
+    [handleModalClose, saveMutation]
+  );
 
   if (variables.isLoading) {
     return (
@@ -88,6 +91,7 @@ export function VariablesManager() {
       </Container>
     );
   }
+
   return (
     <Container size="lg" py="xl">
       <Stack gap="xl">

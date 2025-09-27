@@ -35,7 +35,6 @@ export function UniversalVariableModal({
 
   const config = variableTypeRegistry.getConfig(variableType);
   const EditComponent = config.editComponent;
-
   const handleSave = async (savedVariable: Variable) => {
     try {
       setLoading(true);

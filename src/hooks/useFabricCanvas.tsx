@@ -62,13 +62,11 @@ const useFabricCanvas = (
       stopContextMenu: true,
     });
 
-    setupGrid();
-
     return () => {
       canvasRef.current?.dispose();
       canvasRef.current = null;
     };
-  }, [canvasElement, width, height, setupGrid]);
+  }, [canvasElement, width, height]);
 
   useEffect(() => {
     const canvas = canvasRef.current;

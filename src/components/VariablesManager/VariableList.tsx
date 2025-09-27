@@ -7,7 +7,7 @@ export function VariableList({ type, variables, onAdd, onEdit, onDelete }: Varia
   const config = variableTypeRegistry.getConfig(type);
   const IconComponent = config.icon;
   const CardComponent = config.listItemComponent;
-
+  console.log('Rendering VariableList for type:', type);
   return (
     <Stack gap="md">
       <Group justify="space-between">
